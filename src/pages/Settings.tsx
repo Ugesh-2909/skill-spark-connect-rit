@@ -8,15 +8,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -104,24 +96,25 @@ const Settings = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <FormLabel>First Name</FormLabel>
-                      <Input defaultValue="Jane" />
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input id="firstName" defaultValue="Jane" />
                     </div>
                     <div className="space-y-2">
-                      <FormLabel>Last Name</FormLabel>
-                      <Input defaultValue="Doe" />
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input id="lastName" defaultValue="Doe" />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Username</FormLabel>
-                    <Input defaultValue="janedoe" />
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" defaultValue="janedoe" />
                     <p className="text-sm text-gray-500">This will be your unique identifier</p>
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Bio</FormLabel>
+                    <Label htmlFor="bio">Bio</Label>
                     <Textarea 
+                      id="bio"
                       defaultValue="Final year Computer Science student at RIT with a passion for full-stack development and AI. Hackathon enthusiast and open-source contributor."
                       rows={3}
                     />
@@ -129,14 +122,14 @@ const Settings = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Location</FormLabel>
-                    <Input defaultValue="Rochester, NY" />
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" defaultValue="Rochester, NY" />
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Skills</FormLabel>
+                    <Label htmlFor="skills">Skills</Label>
                     <div className="flex items-center space-x-2">
-                      <Input placeholder="Add a skill" />
+                      <Input id="skills" placeholder="Add a skill" />
                       <Button variant="outline" size="icon">
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -171,15 +164,15 @@ const Settings = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <FormLabel>Email</FormLabel>
-                    <Input defaultValue="jane.doe@rit.edu" type="email" />
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" defaultValue="jane.doe@rit.edu" type="email" />
                   </div>
                   
                   <div className="flex items-center space-x-2 pt-2">
                     <Switch id="marketing-emails" defaultChecked />
-                    <FormLabel htmlFor="marketing-emails" className="cursor-pointer">
+                    <Label htmlFor="marketing-emails" className="cursor-pointer">
                       Receive marketing emails
-                    </FormLabel>
+                    </Label>
                   </div>
                   
                   <Button className="mt-2 bg-uprit-indigo hover:bg-uprit-indigo/90">
@@ -197,18 +190,18 @@ const Settings = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <FormLabel>Current Password</FormLabel>
-                    <Input type="password" />
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input id="current-password" type="password" />
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>New Password</FormLabel>
-                    <Input type="password" />
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input id="new-password" type="password" />
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Confirm New Password</FormLabel>
-                    <Input type="password" />
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input id="confirm-password" type="password" />
                   </div>
                   
                   <Button className="mt-2 bg-uprit-indigo hover:bg-uprit-indigo/90" onClick={handleChangePassword}>

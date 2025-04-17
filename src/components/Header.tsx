@@ -5,7 +5,11 @@ import {
   Bell, 
   Search, 
   Plus, 
-  Menu
+  Menu,
+  User,
+  Settings,
+  LogOut,
+  Trophy
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -74,17 +78,29 @@ export function Header({ toggleSidebar }: HeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link to="/profile" className="w-full">Profile</Link>
+              <Link to="/profile" className="w-full flex items-center">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link to="/achievements" className="w-full">Achievements</Link>
+              <Link to="/achievements" className="w-full flex items-center">
+                <Trophy className="h-4 w-4 mr-2" />
+                Achievements
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link to="/settings" className="w-full">Settings</Link>
+              <Link to="/settings" className="w-full flex items-center">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              Log out
+              <div className="flex items-center w-full">
+                <LogOut className="h-4 w-4 mr-2" />
+                Log out
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

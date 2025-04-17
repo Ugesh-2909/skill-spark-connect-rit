@@ -11,7 +11,8 @@ import {
   Bell, 
   Settings, 
   X,
-  GraduationCap
+  GraduationCap,
+  User
 } from "lucide-react";
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ export function Sidebar({ open }: SidebarProps) {
   ];
 
   const userLinks = [
+    { name: "Profile", href: "/profile", icon: User },
     { name: "Notifications", href: "/notifications", icon: Bell },
     { name: "Settings", href: "/settings", icon: Settings },
   ];

@@ -9,6 +9,8 @@ import Achievements from "./pages/Achievements";
 import Leaderboard from "./pages/Leaderboard";
 import Projects from "./pages/Projects";
 import Network from "./pages/Network";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,9 @@ const App = () => (
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/network" element={<Network />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

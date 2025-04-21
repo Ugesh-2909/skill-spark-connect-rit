@@ -12,7 +12,8 @@ import {
   Settings, 
   X,
   GraduationCap,
-  User
+  User,
+  ShieldAlert
 } from "lucide-react";
 
 interface SidebarProps {
@@ -33,6 +34,9 @@ export function Sidebar({ open }: SidebarProps) {
     { name: "Notifications", href: "/notifications", icon: Bell },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
+
+  // Mocked admin status - in a real app, this would come from authentication context
+  const isAdmin = true;
 
   if (!open) {
     return null;
@@ -103,6 +107,25 @@ export function Sidebar({ open }: SidebarProps) {
             ))}
           </ul>
         </div>
+        
+        {isAdmin && (
+          <div className="mt-8">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Admin
+            </h3>
+            <ul className="mt-2 space-y-1">
+              <li>
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium text-uprit-purple hover:bg-purple-50"
+                >
+                  <ShieldAlert className="h-5 w-5 text-uprit-purple" />
+                  <span>Admin Portal</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        )}
       </nav>
       
       <div className="p-4 border-t border-gray-100">

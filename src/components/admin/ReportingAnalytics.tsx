@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -235,8 +236,8 @@ export function ReportingAnalytics() {
                   <Bar yAxisId="left" dataKey="achievements" fill="#9b87f5" name="Total Achievements" />
                   <Bar yAxisId="right" dataKey="avgCredits" fill="#7E69AB" name="Avg. Credits" />
                 </BarChart>
-              </CardContent>
-            </Card>
+              </ResponsiveContainer>
+            </CardContent>
           </Card>
         </TabsContent>
         

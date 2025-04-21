@@ -26,6 +26,7 @@ export function Sidebar({ open }: SidebarProps) {
     { name: "Network", href: "/network", icon: Users },
     { name: "Projects", href: "/projects", icon: Layout },
     { name: "Leaderboard", href: "/leaderboard", icon: BookOpen },
+    { name: "Faculty Portal", href: "/faculty", icon: GraduationCap }
   ];
 
   const userLinks = [

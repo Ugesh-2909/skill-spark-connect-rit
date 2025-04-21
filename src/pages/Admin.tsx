@@ -3,7 +3,7 @@ import { MainLayout } from "@/layouts/MainLayout";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
-import { AchievementVerification } from "@/components/admin/AchievementVerification";
+// Remove AchievementVerification import
 import { ContentModeration } from "@/components/admin/ContentModeration";
 import { GameManagement } from "@/components/admin/GameManagement";
 import { SystemConfiguration } from "@/components/admin/SystemConfiguration";
@@ -21,16 +21,16 @@ export default function Admin() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Portal</h1>
             <p className="text-muted-foreground">
-              Manage users, verify achievements, and monitor platform activity
+              Manage users, monitor platform activity, and more
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            {/* Achievement Verification tab removed */}
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="gamification">Gamification</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
@@ -45,9 +45,9 @@ export default function Admin() {
             <UserManagement />
           </TabsContent>
           
-          <TabsContent value="achievements">
+          {/* <TabsContent value="achievements">
             <AchievementVerification />
-          </TabsContent>
+          </TabsContent> */}
           
           <TabsContent value="moderation">
             <ContentModeration />

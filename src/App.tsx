@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Welcome from "./pages/Welcome";
 import Admin from "./pages/Admin";
+import Faculty from "./pages/Faculty";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -35,7 +35,7 @@ const App = () => (
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/faculty" element={<Faculty />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

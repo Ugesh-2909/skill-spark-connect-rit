@@ -15,14 +15,15 @@ import NotFound from "./pages/NotFound";
 import Welcome from "./pages/Welcome";
 import Admin from "./pages/Admin";
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
+        <Toaster />
+        <Sonner />
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/" element={<Index />} />

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const userActivityData = [
   { month: "Jan", Logins: 450, Achievements: 120, Comments: 65 },
@@ -227,8 +235,8 @@ export function ReportingAnalytics() {
                   <Bar yAxisId="left" dataKey="achievements" fill="#9b87f5" name="Total Achievements" />
                   <Bar yAxisId="right" dataKey="avgCredits" fill="#7E69AB" name="Avg. Credits" />
                 </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
+              </CardContent>
+            </Card>
           </Card>
         </TabsContent>
         

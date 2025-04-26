@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { BarChart, PieChart, LineChart } from "@/components/ui/chart";
+import { BarChart, PieChart, LineChart } from "@/components/ui/charts";
 
 export function Analytics() {
   // Sample data for charts

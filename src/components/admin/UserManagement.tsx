@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -109,16 +108,13 @@ export function UserManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredUsers = users.filter(user => {
-    // Apply search filter
     const matchesSearch = 
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.department.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Apply role filter
     const matchesRole = roleFilter === "all" || user.role.toLowerCase() === roleFilter.toLowerCase();
     
-    // Apply status filter
     const matchesStatus = statusFilter === "all" || user.status.toLowerCase() === statusFilter.toLowerCase();
     
     return matchesSearch && matchesRole && matchesStatus;
@@ -173,11 +169,6 @@ export function UserManagement() {
               </SelectContent>
             </Select>
           </div>
-          
-          <Button className="w-full md:w-auto">
-            <UserCog className="mr-2 h-4 w-4" />
-            Bulk Actions
-          </Button>
         </div>
       </Card>
       

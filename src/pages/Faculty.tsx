@@ -1,10 +1,7 @@
-
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { MainLayout } from "@/layouts/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,17 +14,13 @@ import {
 } from "@/components/ui/select";
 import {
   BarChart2,
-  Users,
-  Trophy,
-  Book,
-  MessageSquare,
-  PieChart,
   Search,
   Filter,
-  Share2,
-  Map,
+  Trophy,
+  Book,
+  PieChart,
   Download,
-  Calendar
+  Users
 } from "lucide-react";
 import {
   Table,
@@ -37,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const sidebarMenu = [
@@ -45,9 +39,6 @@ const sidebarMenu = [
   { label: "Analytics", icon: PieChart },
   { label: "Projects", icon: Book },
   { label: "Skills", icon: Users },
-  { label: "Achievements", icon: Trophy },
-  { label: "Navigation", icon: Map },
-  { label: "Communication", icon: MessageSquare },
 ];
 
 const studentData = [
@@ -168,7 +159,6 @@ export default function Faculty() {
   const [selectedDomain, setSelectedDomain] = useState("all");
   const [selectedYear, setSelectedYear] = useState("all");
   
-  // Filter students based on search and filters
   const filteredStudents = studentData.filter((student) => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            student.program.toLowerCase().includes(searchTerm.toLowerCase());
@@ -207,10 +197,6 @@ export default function Faculty() {
             ))}
           </ul>
         </nav>
-        <div className="p-4 border-t text-xs text-gray-500">
-          <a href="#" className="hover:underline">Help Resources</a> •{" "}
-          <a href="#" className="hover:underline">Documentation</a>
-        </div>
       </aside>
       <main className="flex-1 flex flex-col">
         <Helmet>
@@ -459,135 +445,7 @@ export default function Faculty() {
             </div>
           )}
           
-          {selectedMenu === "Navigation" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold">Campus Navigation</h2>
-                <p className="text-muted-foreground">Explore campus facilities and resources</p>
-              </div>
-              
-              <div className="grid gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Campus Map</CardTitle>
-                    <CardDescription>Find your way around RIT campus</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-100 rounded-md h-64 flex items-center justify-center mb-4">
-                      <div className="text-center">
-                        <Map className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Interactive campus map would display here</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div className="space-y-1">
-                          <h3 className="font-medium">Locations Directory</h3>
-                          <p className="text-sm text-gray-500">Browse key campus facilities</p>
-                        </div>
-                        <div className="relative w-64">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                          <Input 
-                            type="search"
-                            placeholder="Search locations..."
-                            className="pl-8 bg-gray-50 border-gray-200"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-md divide-y">
-                        {campusLocations.map((location) => (
-                          <div key={location.id} className="flex justify-between items-center p-4">
-                            <div>
-                              <h4 className="font-medium">{location.name}</h4>
-                              <p className="text-sm text-gray-500">{location.description}</p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="outline">{location.type}</Badge>
-                              <Button size="sm" variant="outline">Details</Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {selectedMenu === "Communication" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold">Communication Center</h2>
-                <p className="text-muted-foreground">Stay updated with important notifications</p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notifications</CardTitle>
-                    <CardDescription>Recent activity updates</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {notificationData.map((notification) => (
-                      <div 
-                        key={notification.id} 
-                        className={`flex items-start space-x-4 p-3 rounded-md ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
-                      >
-                        <Avatar>
-                          <AvatarImage src={notification.avatar} alt="User" />
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className={`text-sm ${notification.read ? 'font-normal' : 'font-medium'}`}>
-                            {notification.message}
-                          </p>
-                          <span className="text-xs text-gray-500">{notification.time}</span>
-                        </div>
-                        {!notification.read && (
-                          <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                        )}
-                      </div>
-                    ))}
-                    <div className="text-center pt-2">
-                      <Button variant="ghost" size="sm">View All Notifications</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Announcements</CardTitle>
-                    <CardDescription>Important updates and information</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border-l-4 border-uprit-indigo p-3 bg-gray-50 rounded-md">
-                      <h4 className="font-medium">Spring Quarter Registration</h4>
-                      <p className="text-sm text-gray-600 mt-1">Registration for spring quarter courses begins next week. Please review student prerequisites.</p>
-                      <span className="text-xs text-gray-500 mt-2 block">Posted April 20, 2025</span>
-                    </div>
-                    <div className="border-l-4 border-yellow-400 p-3 bg-yellow-50 rounded-md">
-                      <h4 className="font-medium">Faculty Meeting Reminder</h4>
-                      <p className="text-sm text-gray-600 mt-1">The monthly faculty meeting is scheduled for tomorrow at 3 PM in the Innovation Center.</p>
-                      <span className="text-xs text-gray-500 mt-2 block">Posted April 25, 2025</span>
-                    </div>
-                    <div className="border-l-4 border-green-500 p-3 bg-green-50 rounded-md">
-                      <h4 className="font-medium">Student Project Showcase</h4>
-                      <p className="text-sm text-gray-600 mt-1">The end-of-term project showcase will be held on May 15. Please encourage your students to participate.</p>
-                      <span className="text-xs text-gray-500 mt-2 block">Posted April 23, 2025</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {(selectedMenu !== "Dashboard" && 
-            selectedMenu !== "Leaderboard" && 
-            selectedMenu !== "Navigation" && 
-            selectedMenu !== "Communication") && (
+          {(selectedMenu !== "Dashboard" && selectedMenu !== "Leaderboard") && (
             <div className="flex items-center justify-center h-64 text-lg text-muted-foreground">
               {selectedMenu} - Coming Soon
             </div>

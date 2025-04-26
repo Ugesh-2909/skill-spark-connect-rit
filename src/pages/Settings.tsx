@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -13,31 +12,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Bell, 
-  Camera, 
   Key, 
   Lock, 
   LogOut, 
   Mail, 
-  Plus, 
   Shield, 
-  Trash2, 
-  User 
+  Trash2 
 } from "lucide-react";
 
 const Settings = () => {
   const { toast } = useToast();
-  
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully."
-    });
-  };
   
   const handleChangePassword = () => {
     toast({
@@ -51,12 +38,8 @@ const Settings = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Settings</h1>
         
-        <Tabs defaultValue="profile" className="mb-6">
-          <TabsList className="w-full grid grid-cols-4 mb-6">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profile</span>
-            </TabsTrigger>
+        <Tabs defaultValue="account" className="mb-6">
+          <TabsList className="w-full grid grid-cols-3 mb-6">
             <TabsTrigger value="account" className="flex items-center gap-2">
               <Key className="h-4 w-4" />
               <span className="hidden sm:inline">Account</span>
@@ -70,89 +53,6 @@ const Settings = () => {
               <span className="hidden sm:inline">Privacy</span>
             </TabsTrigger>
           </TabsList>
-          
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your profile information visible to others</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 mb-6">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src="https://i.pravatar.cc/150?img=5" alt="Profile" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <Button size="sm" variant="outline" className="mb-2">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Change Photo
-                    </Button>
-                    <p className="text-sm text-gray-500">JPG, GIF or PNG. 1MB max size.</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" defaultValue="Jane" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" defaultValue="Doe" />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" defaultValue="janedoe" />
-                    <p className="text-sm text-gray-500">This will be your unique identifier</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea 
-                      id="bio"
-                      defaultValue="Final year Computer Science student at RIT with a passion for full-stack development and AI. Hackathon enthusiast and open-source contributor."
-                      rows={3}
-                    />
-                    <p className="text-sm text-gray-500">Brief description about yourself</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input id="location" defaultValue="Rochester, NY" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="skills">Skills</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input id="skills" placeholder="Add a skill" />
-                      <Button variant="outline" size="icon">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {["React", "TypeScript", "Node.js", "Python", "Machine Learning"].map((skill, i) => (
-                        <div key={i} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                          {skill}
-                          <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 hover:bg-gray-200">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <Button className="mt-4 bg-uprit-indigo hover:bg-uprit-indigo/90" onClick={handleSaveProfile}>
-                    Save Changes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
           
           {/* Account Tab */}
           <TabsContent value="account">

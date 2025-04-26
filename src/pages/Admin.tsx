@@ -1,69 +1,62 @@
 
-import { MainLayout } from "@/layouts/MainLayout";
+import { useState } from "react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
-// Achievement Verification import already removed
 import { ContentModeration } from "@/components/admin/ContentModeration";
 import { GameManagement } from "@/components/admin/GameManagement";
 import { SystemConfiguration } from "@/components/admin/SystemConfiguration";
 import { ReportingAnalytics } from "@/components/admin/ReportingAnalytics";
 import { Helmet } from "react-helmet";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export default function Admin() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+
   return (
-    <MainLayout>
-      <Helmet>
-        <title>Admin Portal | UpRIT</title>
-      </Helmet>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
+    <div className="flex min-h-screen bg-background">
+      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+      <div className="flex-1 p-6">
+        <Helmet>
+          <title>Admin Portal | UpRIT</title>
+        </Helmet>
+        
+        <div className="space-y-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Portal</h1>
             <p className="text-muted-foreground">
               Manage users, monitor platform activity, and more
             </p>
           </div>
-        </div>
 
-        <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            {/* Achievement Verification tab removed */}
-            <TabsTrigger value="moderation">Moderation</TabsTrigger>
-            <TabsTrigger value="gamification">Gamification</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="dashboard">
-            <AdminDashboard />
-          </TabsContent>
-          
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
-          
-          {/* Achievement Verification tab content removed */}
-          
-          <TabsContent value="moderation">
-            <ContentModeration />
-          </TabsContent>
-          
-          <TabsContent value="gamification">
-            <GameManagement />
-          </TabsContent>
-          
-          <TabsContent value="system">
-            <SystemConfiguration />
-          </TabsContent>
-          
-          <TabsContent value="reports">
-            <ReportingAnalytics />
-          </TabsContent>
-        </Tabs>
+          <Tabs value={activeTab} className="space-y-4">
+            <TabsContent value="dashboard">
+              <AdminDashboard />
+            </TabsContent>
+            
+            <TabsContent value="users">
+              <UserManagement />
+            </TabsContent>
+            
+            <TabsContent value="moderation">
+              <ContentModeration />
+            </TabsContent>
+            
+            <TabsContent value="gamification">
+              <GameManagement />
+            </TabsContent>
+            
+            <TabsContent value="system">
+              <SystemConfiguration />
+            </TabsContent>
+            
+            <TabsContent value="reports">
+              <ReportingAnalytics />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

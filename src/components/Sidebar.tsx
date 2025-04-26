@@ -10,7 +10,6 @@ import {
   BookOpen, 
   Bell, 
   Settings, 
-  X,
   GraduationCap,
   User,
   ShieldAlert
@@ -61,16 +60,6 @@ export function Sidebar({ open }: SidebarProps) {
           <div>
             <h4 className="font-medium text-sm">Jane Doe</h4>
             <p className="text-xs text-gray-500">Computer Science</p>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
-          <div className="bg-gray-50 p-2 rounded-md">
-            <div className="font-semibold text-uprit-indigo">423</div>
-            <div className="text-gray-500">Points</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded-md">
-            <div className="font-semibold text-uprit-purple">#15</div>
-            <div className="text-gray-500">Rank</div>
           </div>
         </div>
       </div>

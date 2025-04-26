@@ -3,7 +3,7 @@ import { MainLayout } from "@/layouts/MainLayout";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
-// Remove AchievementVerification import
+// Achievement Verification import already removed
 import { ContentModeration } from "@/components/admin/ContentModeration";
 import { GameManagement } from "@/components/admin/GameManagement";
 import { SystemConfiguration } from "@/components/admin/SystemConfiguration";
@@ -27,7 +27,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             {/* Achievement Verification tab removed */}
@@ -45,9 +45,7 @@ export default function Admin() {
             <UserManagement />
           </TabsContent>
           
-          {/* <TabsContent value="achievements">
-            <AchievementVerification />
-          </TabsContent> */}
+          {/* Achievement Verification tab content removed */}
           
           <TabsContent value="moderation">
             <ContentModeration />

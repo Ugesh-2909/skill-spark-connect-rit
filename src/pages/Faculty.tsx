@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { MessageSquare } from "lucide-react";
 
 const sidebarMenu = [
   { label: "Dashboard", icon: BarChart2 },

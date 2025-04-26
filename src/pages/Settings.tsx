@@ -22,6 +22,7 @@ import {
   Shield, 
   Trash2 
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
   const { toast } = useToast();

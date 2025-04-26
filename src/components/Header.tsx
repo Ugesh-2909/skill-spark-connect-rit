@@ -28,8 +28,7 @@ interface HeaderProps {
 }
 
 export function Header({ toggleSidebar }: HeaderProps) {
-  // In a real app, you would check authentication state here
-  const isAuthenticated = true; // Hardcoded for now
+  const isAuthenticated = true;
 
   return (
     <header className="border-b border-gray-200 bg-white py-3 px-4 flex items-center justify-between">
@@ -60,8 +59,15 @@ export function Header({ toggleSidebar }: HeaderProps) {
         
         {isAuthenticated ? (
           <>
-            <Button variant="ghost" size="icon" className="text-gray-500">
-              <Bell className="h-5 w-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-500"
+              asChild
+            >
+              <Link to="/notifications">
+                <Bell className="h-5 w-5" />
+              </Link>
             </Button>
             
             <DropdownMenu>

@@ -14,8 +14,8 @@ import NotFound from "./pages/NotFound";
 import Welcome from "./pages/Welcome";
 import Admin from "./pages/Admin";
 import Faculty from "./pages/Faculty";
+import Notifications from "./pages/Notifications";
 
-// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,6 +36,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/faculty" element={<Faculty />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

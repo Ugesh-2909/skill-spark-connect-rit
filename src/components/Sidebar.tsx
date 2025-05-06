@@ -1,227 +1,220 @@
 
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Home, 
-  Trophy, 
-  Users, 
-  Layout, 
-  BookOpen, 
-  Bell, 
-  Settings, 
-  GraduationCap,
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import {
+  ChevronLeft,
+  Award,
+  Trophy,
+  Code,
+  Settings,
+  Home,
+  Users,
   User,
-  ShieldAlert,
-  LogOut
+  Bell,
+  LogOut,
+  MessageSquare
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useMessages } from "@/hooks/use-messages";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   open: boolean;
 }
 
 export function Sidebar({ open }: SidebarProps) {
-  const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
   const location = useLocation();
-  
-  const navItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Achievements", href: "/achievements", icon: Trophy },
-    { name: "Network", href: "/network", icon: Users },
-    { name: "Projects", href: "/projects", icon: Layout },
-    { name: "Leaderboard", href: "/leaderboard", icon: BookOpen }
-  ];
+  const { unreadCount } = useNotifications();
+  const { getUnreadMessagesCount } = useMessages();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const { user } = useAuth();
 
-  const userLinks = [
-    { name: "Profile", href: "/profile", icon: User },
-    { name: "Notifications", href: "/notifications", icon: Bell },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
-  
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) throw error;
-          
-          setProfile(data);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        }
-      }
-    };
-    
-    fetchProfile();
+    if (user) {
+      getUnreadMessagesCount().then(setUnreadMessages);
+    }
   }, [user]);
 
-  // Check if the user is an admin
-  const isAdmin = profile?.role === 'admin';
-  // Check if the user is faculty
-  const isFaculty = profile?.role === 'faculty';
+  // Function to handle sign out
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <aside
+      className={cn(
+        "flex-col bg-white border-r border-gray-200 h-screen",
+        open ? "flex w-64" : "hidden w-0 md:flex md:w-16"
+      )}
+    >
+      <div className="h-14 py-2 flex items-center justify-center border-b">
+        <Link
+          to="/"
+          className="flex items-center"
+          aria-label="Go to dashboard"
+        >
+          {open ? (
+            <div className="flex items-center">
+              <img src="/placeholder.svg" alt="Logo" className="h-8 w-8" />
+              <span className="text-xl font-bold ml-2 text-uprit-indigo">
+                UpRIT
+              </span>
+            </div>
+          ) : (
+            <img src="/placeholder.svg" alt="Logo" className="h-8 w-8" />
+          )}
+        </Link>
+      </div>
+      <ScrollArea className="flex-1 py-3">
+        <nav className="flex flex-col gap-1 px-2">
+          <NavItem
+            open={open}
+            href="/"
+            icon={<Home />}
+            label="Dashboard"
+            active={location.pathname === "/"}
+          />
+          <NavItem
+            open={open}
+            href="/achievements"
+            icon={<Award />}
+            label="Achievements"
+            active={location.pathname.startsWith("/achievements")}
+          />
+          <NavItem
+            open={open}
+            href="/leaderboard"
+            icon={<Trophy />}
+            label="Leaderboard"
+            active={location.pathname.startsWith("/leaderboard")}
+          />
+          <NavItem
+            open={open}
+            href="/projects"
+            icon={<Code />}
+            label="Projects"
+            active={location.pathname.startsWith("/projects")}
+          />
+          <NavItem
+            open={open}
+            href="/network"
+            icon={<Users />}
+            label="Network"
+            active={location.pathname.startsWith("/network")}
+          />
+          <NavItem
+            open={open}
+            href="/messages"
+            icon={<MessageSquare />}
+            label="Messages"
+            active={location.pathname.startsWith("/messages")}
+            badge={unreadMessages > 0 ? unreadMessages : undefined}
+          />
+          <NavItem
+            open={open}
+            href="/notifications"
+            icon={<Bell />}
+            label="Notifications"
+            active={location.pathname === "/notifications"}
+            badge={unreadCount > 0 ? unreadCount : undefined}
+          />
+          <NavItem
+            open={open}
+            href="/profile"
+            icon={<User />}
+            label="Profile"
+            active={location.pathname === "/profile"}
+          />
+        </nav>
+      </ScrollArea>
+      <div className="flex flex-col gap-1 p-2 border-t">
+        <NavItem
+          open={open}
+          href="/settings"
+          icon={<Settings />}
+          label="Settings"
+          active={location.pathname === "/settings"}
+        />
+        <button
+          className={cn(
+            "flex items-center h-10 px-2 rounded-md text-gray-700 hover:bg-gray-100",
+            open ? "justify-start" : "justify-center"
+          )}
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-5 w-5" />
+          {open && <span className="ml-2">Sign Out</span>}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+interface NavItemProps {
+  open: boolean;
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  badge?: number;
+}
+
+function NavItem({
+  open,
+  href,
+  icon,
+  label,
+  active,
+  badge,
+}: NavItemProps) {
+  const NavButton = (
+    <Button
+      variant="ghost"
+      asChild
+      className={cn(
+        "w-full justify-start font-normal h-10",
+        active
+          ? "bg-gray-100 text-uprit-indigo font-medium"
+          : "text-gray-700",
+        open ? "px-3" : "px-0 justify-center"
+      )}
+    >
+      <Link to={href} className={cn("flex items-center relative", open ? "" : "flex-col")}>
+        {React.cloneElement(icon as React.ReactElement, {
+          className: "h-5 w-5",
+        })}
+        {open && <span className="ml-2">{label}</span>}
+        {badge !== undefined && (
+          <span
+            className={cn(
+              "flex items-center justify-center rounded-full bg-uprit-indigo text-white",
+              open
+                ? "absolute right-0 top-0 -mt-1 -mr-1 h-5 w-5 text-xs"
+                : "mt-1 h-4 w-4 text-[10px]"
+            )}
+          >
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </Link>
+    </Button>
+  );
 
   if (!open) {
-    return null;
-  }
-
-  if (!user) {
     return (
-      <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col relative animate-fade-in z-20">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <GraduationCap className="h-6 w-6 text-uprit-indigo" />
-            <span className="font-display font-bold text-lg text-uprit-indigo">UpRIT</span>
-          </Link>
-        </div>
-        <div className="flex-1 p-4">
-          <Link to="/auth">
-            <Button className="w-full">Sign In</Button>
-          </Link>
-        </div>
-      </div>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
+        <TooltipContent side="right" className="ml-2">
+          {label}
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
-  return (
-    <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col relative animate-fade-in z-20">
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <GraduationCap className="h-6 w-6 text-uprit-indigo" />
-          <span className="font-display font-bold text-lg text-uprit-indigo">UpRIT</span>
-        </Link>
-      </div>
-      
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarImage 
-              src={profile?.avatar_url || "https://i.pravatar.cc/150?img=5"} 
-              alt={profile?.full_name || "User"} 
-            />
-            <AvatarFallback>
-              {profile?.full_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h4 className="font-medium text-sm">{profile?.full_name || user.email}</h4>
-            <p className="text-xs text-gray-500">{profile?.department || 'Student'}</p>
-          </div>
-        </div>
-      </div>
-      
-      <nav className="flex-1 overflow-y-auto p-4">
-        <ul className="space-y-1">
-          {navItems.map((item) => (
-            <li key={item.name}>
-              <Link
-                to={item.href}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === item.href 
-                    ? 'bg-uprit-indigo/10 text-uprit-indigo' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <item.icon className={`h-5 w-5 ${
-                  location.pathname === item.href 
-                    ? 'text-uprit-indigo' 
-                    : 'text-gray-500'
-                }`} />
-                <span>{item.name}</span>
-              </Link>
-            </li>
-          ))}
-          
-          {isFaculty && (
-            <li>
-              <Link
-                to="/faculty"
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === '/faculty' 
-                    ? 'bg-uprit-indigo/10 text-uprit-indigo' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <GraduationCap className={`h-5 w-5 ${
-                  location.pathname === '/faculty' 
-                    ? 'text-uprit-indigo' 
-                    : 'text-gray-500'
-                }`} />
-                <span>Faculty Portal</span>
-              </Link>
-            </li>
-          )}
-        </ul>
-        
-        <div className="mt-8">
-          <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            User
-          </h3>
-          <ul className="mt-2 space-y-1">
-            {userLinks.map((item) => (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                    location.pathname === item.href 
-                      ? 'bg-uprit-indigo/10 text-uprit-indigo' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <item.icon className={`h-5 w-5 ${
-                    location.pathname === item.href 
-                      ? 'text-uprit-indigo' 
-                      : 'text-gray-500'
-                  }`} />
-                  <span>{item.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        {isAdmin && (
-          <div className="mt-8">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Admin
-            </h3>
-            <ul className="mt-2 space-y-1">
-              <li>
-                <Link
-                  to="/admin"
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                    location.pathname === '/admin' 
-                      ? 'bg-purple-100 text-uprit-purple' 
-                      : 'text-uprit-purple hover:bg-purple-50'
-                  }`}
-                >
-                  <ShieldAlert className={`h-5 w-5 ${
-                    location.pathname === '/admin' 
-                      ? 'text-uprit-purple' 
-                      : 'text-uprit-purple'
-                  }`} />
-                  <span>Admin Portal</span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-        )}
-      </nav>
-      
-      <div className="p-4 border-t border-gray-100">
-        <Button variant="outline" className="w-full" onClick={() => signOut()}>
-          <LogOut className="h-4 w-4 mr-2" />
-          <span>Sign Out</span>
-        </Button>
-      </div>
-    </div>
-  );
+  return NavButton;
 }

@@ -17,6 +17,7 @@ import Welcome from "./pages/Welcome";
 import Admin from "./pages/Admin";
 import Faculty from "./pages/Faculty";
 import Notifications from "./pages/Notifications";
+import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/faculty" element={<ProtectedRoute><Faculty /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

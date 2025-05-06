@@ -5,9 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define form schema
 const loginSchema = z.object({
@@ -22,7 +22,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { toast } = useToast();
+  const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,26 +38,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setIsLoading(true);
     
     try {
-      // In a real app, you would call an authentication service here
-      console.log("Login attempt with:", data);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message
-      toast({
-        title: "Login successful",
-        description: "Welcome back to UpRIT!",
-      });
-      
-      // Call the success callback
+      await signIn(data.email, data.password);
       onSuccess();
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive"
-      });
+      // Error is already handled in the signIn function
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

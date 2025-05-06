@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -8,15 +7,16 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define form schema
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email address").refine(
-    (email) => email.endsWith("@rit.edu"),
+    (email) => email.endsWith("@rit.edu") || email.endsWith("@csbs.ritchennai.edu.in"),
     {
-      message: "Please use your RIT email address (@rit.edu)",
+      message: "Please use your RIT email address (@rit.edu or @csbs.ritchennai.edu.in)",
     }
   ),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -34,6 +34,7 @@ interface SignupFormProps {
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -53,11 +54,11 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
     setIsLoading(true);
     
     try {
-      // In a real app, you would call a registration service here
-      console.log("Registration attempt with:", data);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the signUp function from AuthContext
+      await signUp(data.email, data.password, {
+        username: `${data.firstName.toLowerCase()}_${data.lastName.toLowerCase()}`,
+        full_name: `${data.firstName} ${data.lastName}`
+      });
       
       // Show success message
       toast({
@@ -67,10 +68,10 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       
       // Call the success callback to switch to login tab
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "Please try again or contact support if the issue persists.",
+        description: error.message || "Please try again or contact support if the issue persists.",
         variant: "destructive"
       });
     } finally {

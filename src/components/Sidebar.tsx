@@ -35,10 +35,22 @@ export function Sidebar({ open }: SidebarProps) {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      getUnreadMessagesCount().then(setUnreadMessages);
-    }
-  }, [user]);
+    const fetchUnreadMessages = async () => {
+      if (user) {
+        const count = await getUnreadMessagesCount();
+        setUnreadMessages(count);
+      }
+    };
+    
+    fetchUnreadMessages();
+    
+    // Set up an interval to check for new messages periodically
+    const interval = setInterval(fetchUnreadMessages, 30000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [user, getUnreadMessagesCount]);
 
   // Function to handle sign out
   const handleSignOut = async () => {

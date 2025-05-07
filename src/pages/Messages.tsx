@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -8,13 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Search, Send, Loader2 } from "lucide-react";
-import { useMessages, Message } from "@/hooks/use-messages";
+import { useMessages, Message, ConversationUser } from "@/hooks/use-messages";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-// Import the specific types we need from useMessages hook
-// Use the exported types from useMessages hook
-import { ConversationUser } from '@/hooks/use-messages';
 
 export default function Messages() {
   const { user } = useAuth();
@@ -57,7 +54,14 @@ export default function Messages() {
           .eq('id', selectedConversation)
           .single();
         
-        setSelectedUser(data);
+        if (data) {
+          setSelectedUser({
+            ...data,
+            last_message: '',
+            last_message_time: '',
+            unread_count: 0
+          });
+        }
       }
     };
     
@@ -125,30 +129,30 @@ export default function Messages() {
                   </div>
                 ) : (
                   filteredConversations.map((conversation) => (
-                    <div key={conversation.userId}>
+                    <div key={conversation.id}>
                       <button
                         className={`w-full p-4 text-left flex items-center hover:bg-gray-50 transition-colors ${
-                          selectedConversation === conversation.userId ? 'bg-gray-100' : ''
+                          selectedConversation === conversation.id ? 'bg-gray-100' : ''
                         }`}
-                        onClick={() => setSelectedConversation(conversation.userId)}
+                        onClick={() => setSelectedConversation(conversation.id)}
                       >
                         <div className="relative">
                           <Avatar>
                             <AvatarImage src={conversation.avatar_url} alt={conversation.full_name} />
                             <AvatarFallback>{conversation.full_name.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          {conversation.unreadCount > 0 && (
+                          {conversation.unread_count > 0 && (
                             <span className="absolute -top-1 -right-1 bg-uprit-indigo text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                              {conversation.unreadCount}
+                              {conversation.unread_count}
                             </span>
                           )}
                         </div>
                         <div className="ml-3 flex-1 overflow-hidden">
                           <p className="font-medium">{conversation.full_name}</p>
-                          <p className="text-sm text-gray-500 truncate">{conversation.lastMessage}</p>
+                          <p className="text-sm text-gray-500 truncate">{conversation.last_message}</p>
                         </div>
                         <div className="text-xs text-gray-400">
-                          {new Date(conversation.lastMessageTime).toLocaleDateString()}
+                          {new Date(conversation.last_message_time).toLocaleDateString()}
                         </div>
                       </button>
                       <Separator />

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,16 +59,34 @@ export function useMessages() {
       if (error) throw error;
 
       // Fix typing issues by ensuring the data has the correct structure
-      const typedMessages: Message[] = (data || []).map(msg => ({
-        id: msg.id,
-        sender_id: msg.sender_id,
-        recipient_id: msg.recipient_id,
-        content: msg.content,
-        created_at: msg.created_at,
-        read: msg.read,
-        sender: msg.sender as Profile,
-        recipient: msg.recipient as Profile
-      }));
+      const typedMessages: Message[] = (data || []).map(msg => {
+        const sender = typeof msg.sender === 'object' && msg.sender !== null ? 
+          {
+            id: msg.sender.id || '',
+            username: msg.sender.username || '',
+            full_name: msg.sender.full_name || '',
+            avatar_url: msg.sender.avatar_url
+          } as Profile : undefined;
+          
+        const recipient = typeof msg.recipient === 'object' && msg.recipient !== null ? 
+          {
+            id: msg.recipient.id || '',
+            username: msg.recipient.username || '',
+            full_name: msg.recipient.full_name || '',
+            avatar_url: msg.recipient.avatar_url
+          } as Profile : undefined;
+          
+        return {
+          id: msg.id,
+          sender_id: msg.sender_id,
+          recipient_id: msg.recipient_id,
+          content: msg.content,
+          created_at: msg.created_at,
+          read: msg.read,
+          sender,
+          recipient
+        };
+      });
       
       setMessages(typedMessages);
       
@@ -184,6 +203,25 @@ export function useMessages() {
     }
   };
 
+  const getUnreadMessagesCount = async (): Promise<number> => {
+    try {
+      if (!user) return 0;
+      
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .eq('read', false);
+      
+      if (error) throw error;
+      
+      return count || 0;
+    } catch (error: any) {
+      console.error('Error getting unread messages count:', error);
+      return 0;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchConversations();
@@ -196,6 +234,7 @@ export function useMessages() {
     loading,
     fetchMessages,
     fetchConversations,
+    getUnreadMessagesCount,
     sendMessage: async (recipientId: string, content: string) => {
       try {
         if (!user) {

@@ -28,6 +28,7 @@ export function useLikes() {
         .eq('item_type', itemType);
       
       if (error) throw error;
+      
       setLikes(data as Like[]);
       return data as Like[];
     } catch (error: any) {

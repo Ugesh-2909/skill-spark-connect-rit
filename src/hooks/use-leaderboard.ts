@@ -82,7 +82,7 @@ export function useLeaderboard() {
           console.error('Error counting projects for user:', profile.id, projectsError);
         }
         
-        // Get connections count
+        // Get connections count - this needs to be fixed to not use string interpolation in .or()
         const { count: connectionsCount, error: connectionsError } = await supabase
           .from('connections')
           .select('id', { count: 'exact', head: true })

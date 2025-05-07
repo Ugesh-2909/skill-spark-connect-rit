@@ -73,14 +73,14 @@ export function useProjects() {
           }
         }
         
-        // Ensure creator is properly typed with null checks
+        // Create a safe creator profile object with fallbacks
         let creatorProfile: Profile | undefined = undefined;
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator?.id ? String(project.creator.id) : '',
-            username: project.creator?.username ? String(project.creator.username) : '',
-            full_name: project.creator?.full_name ? String(project.creator.full_name) : '',
+            id: String(project.creator?.id || ''),
+            username: String(project.creator?.username || ''),
+            full_name: String(project.creator?.full_name || ''),
             avatar_url: project.creator?.avatar_url || null
           };
         }
@@ -144,14 +144,14 @@ export function useProjects() {
           }
         }
         
-        // Ensure creator is properly typed with null checks
+        // Create a safe creator profile object with fallbacks
         let creatorProfile: Profile | undefined = undefined;
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator?.id ? String(project.creator.id) : '',
-            username: project.creator?.username ? String(project.creator.username) : '',
-            full_name: project.creator?.full_name ? String(project.creator.full_name) : '',
+            id: String(project.creator?.id || ''),
+            username: String(project.creator?.username || ''),
+            full_name: String(project.creator?.full_name || ''),
             avatar_url: project.creator?.avatar_url || null
           };
         }

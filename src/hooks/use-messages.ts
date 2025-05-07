@@ -60,20 +60,20 @@ export function useMessages() {
 
       // Fix typing issues by ensuring the data has the correct structure
       const typedMessages: Message[] = (data || []).map(msg => {
-        // Use proper type guards and non-null assertions where appropriate
+        // Use proper type guards and create safe objects
         const sender: Profile | undefined = msg.sender && typeof msg.sender === 'object' ? 
           {
-            id: msg.sender?.id ? String(msg.sender.id) : '',
-            username: msg.sender?.username ? String(msg.sender.username) : '',
-            full_name: msg.sender?.full_name ? String(msg.sender.full_name) : '',
+            id: String(msg.sender?.id || ''),
+            username: String(msg.sender?.username || ''),
+            full_name: String(msg.sender?.full_name || ''),
             avatar_url: msg.sender?.avatar_url || null
           } : undefined;
           
         const recipient: Profile | undefined = msg.recipient && typeof msg.recipient === 'object' ? 
           {
-            id: msg.recipient?.id ? String(msg.recipient.id) : '',
-            username: msg.recipient?.username ? String(msg.recipient.username) : '',
-            full_name: msg.recipient?.full_name ? String(msg.recipient.full_name) : '',
+            id: String(msg.recipient?.id || ''),
+            username: String(msg.recipient?.username || ''),
+            full_name: String(msg.recipient?.full_name || ''),
             avatar_url: msg.recipient?.avatar_url || null
           } : undefined;
           

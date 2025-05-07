@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -73,12 +72,11 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
   const onSubmit = async (data: ProjectFormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await createProject(
-        data.title, 
-        data.description, 
-        [], // No team members initially
-        data.status as 'planning' | 'in_progress' | 'completed' | 'archived'
-      );
+      const result = await createProject({
+        title: data.title,
+        description: data.description,
+        members: []
+      });
       
       if (result && user) {
         // Award points for creating a project

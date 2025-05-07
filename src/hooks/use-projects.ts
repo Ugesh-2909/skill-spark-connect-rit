@@ -25,6 +25,12 @@ export interface Project {
   team_members?: Profile[];
 }
 
+interface ProjectData {
+  title: string;
+  description: string;
+  members?: string[];
+}
+
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [userProjects, setUserProjects] = useState<Project[]>([]);
@@ -72,10 +78,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator.id || '',
-            username: project.creator.username || '',
-            full_name: project.creator.full_name || '',
-            avatar_url: project.creator.avatar_url
+            id: project.creator?.id || '',
+            username: project.creator?.username || '',
+            full_name: project.creator?.full_name || '',
+            avatar_url: project.creator?.avatar_url
           };
         }
         
@@ -143,10 +149,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator.id || '',
-            username: project.creator.username || '',
-            full_name: project.creator.full_name || '',
-            avatar_url: project.creator.avatar_url
+            id: project.creator?.id || '',
+            username: project.creator?.username || '',
+            full_name: project.creator?.full_name || '',
+            avatar_url: project.creator?.avatar_url
           };
         }
         
@@ -171,11 +177,7 @@ export function useProjects() {
     }
   };
 
-  const createProject = async (projectData: {
-    title: string;
-    description: string;
-    members?: string[];
-  }) => {
+  const createProject = async (projectData: ProjectData) => {
     try {
       if (!user) {
         toast({

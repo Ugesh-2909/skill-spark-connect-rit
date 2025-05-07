@@ -118,8 +118,8 @@ export function useLeaderboard() {
         ? rankedLeaderboard.slice(0, filter.limit)
         : rankedLeaderboard;
       
-      setLeaderboard(limitedLeaderboard);
-      return limitedLeaderboard;
+      setLeaderboard(limitedLeaderboard as LeaderboardUser[]);
+      return limitedLeaderboard as LeaderboardUser[];
     } catch (error: any) {
       console.error('Error fetching leaderboard:', error);
       toast({
@@ -162,6 +162,10 @@ export function useLeaderboard() {
       
       if (profilesError) throw profilesError;
       
+      if (!profiles || profiles.length === 0) {
+        return [];
+      }
+      
       // Get unique departments
       const departments = [...new Set(profiles.map(p => p.department))];
       
@@ -172,7 +176,7 @@ export function useLeaderboard() {
       }));
       
       // Filter out null values
-      return departmentLeaders.filter(Boolean);
+      return departmentLeaders.filter(Boolean) as LeaderboardUser[];
     } catch (error: any) {
       console.error('Error fetching department leaders:', error);
       toast({

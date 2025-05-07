@@ -35,13 +35,9 @@ export function useConnections() {
       setLoading(true);
       
       // Get connections where the user is the follower
-      // Need to use raw query since connections table wasn't detected by TypeScript
       const { data: followingData, error: followingError } = await supabase
         .from('connections')
-        .select(`
-          *,
-          following:profiles!following_id(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('follower_id', user.id)
         .eq('status', 'accepted');
       
@@ -50,10 +46,7 @@ export function useConnections() {
       // Get connections where the user is being followed
       const { data: followersData, error: followersError } = await supabase
         .from('connections')
-        .select(`
-          *,
-          follower:profiles!follower_id(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('following_id', user.id)
         .eq('status', 'accepted');
       
@@ -62,18 +55,19 @@ export function useConnections() {
       // Get pending connection requests
       const { data: pendingData, error: pendingError } = await supabase
         .from('connections')
-        .select(`
-          *,
-          follower:profiles!follower_id(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('following_id', user.id)
         .eq('status', 'pending');
       
       if (pendingError) throw pendingError;
       
-      // Cast the data to match the Connection type
-      setConnections([...(followingData || []), ...(followersData || [])] as Connection[]);
-      setPendingRequests((pendingData || []) as Connection[]);
+      // Now let's load profiles for all connections
+      const allConnections = [...(followingData || []), ...(followersData || [])];
+      const enrichedConnections = await enrichConnectionsWithProfiles(allConnections);
+      const enrichedPendingRequests = await enrichConnectionsWithProfiles(pendingData || []);
+      
+      setConnections(enrichedConnections as Connection[]);
+      setPendingRequests(enrichedPendingRequests as Connection[]);
     } catch (error: any) {
       console.error('Error fetching connections:', error);
       toast({
@@ -84,6 +78,36 @@ export function useConnections() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to enrich connections with profile data
+  const enrichConnectionsWithProfiles = async (connections: any[]) => {
+    if (connections.length === 0) return [];
+    
+    const enriched = await Promise.all(connections.map(async (connection) => {
+      // Fetch follower profile
+      const { data: followerProfile } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .eq('id', connection.follower_id)
+        .single();
+      
+      // Fetch following profile
+      const { data: followingProfile } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .eq('id', connection.following_id)
+        .single();
+      
+      return {
+        ...connection,
+        follower: followerProfile as Profile,
+        following: followingProfile as Profile,
+        status: connection.status as 'pending' | 'accepted' | 'rejected'
+      };
+    }));
+    
+    return enriched;
   };
 
   const sendConnectionRequest = async (userId: string) => {
@@ -142,11 +166,13 @@ export function useConnections() {
       
       if (error) throw error;
       
+      const enrichedConnection = (await enrichConnectionsWithProfiles([data]))[0];
+      
       // Update local state
       setPendingRequests(prev => 
         prev.filter(request => request.id !== connectionId)
       );
-      setConnections(prev => [...prev, data]);
+      setConnections(prev => [...prev, enrichedConnection as Connection]);
       
       toast({
         title: "Connection request accepted",
@@ -249,22 +275,22 @@ export function useConnections() {
       // Check if there's a connection where user is the follower
       const { data: followingData } = await supabase
         .from('connections')
-        .select('*')
+        .select('status')
         .eq('follower_id', user.id)
         .eq('following_id', userId)
         .single();
       
-      if (followingData) return followingData.status;
+      if (followingData) return followingData.status as 'pending' | 'accepted' | 'rejected';
       
       // Check if there's a connection where user is being followed
       const { data: followerData } = await supabase
         .from('connections')
-        .select('*')
+        .select('status')
         .eq('follower_id', userId)
         .eq('following_id', user.id)
         .single();
       
-      if (followerData) return followerData.status;
+      if (followerData) return followerData.status as 'pending' | 'accepted' | 'rejected';
       
       return null;
     } catch (error) {

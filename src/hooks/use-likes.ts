@@ -28,8 +28,8 @@ export function useLikes() {
         .eq('item_type', itemType);
       
       if (error) throw error;
-      setLikes(data || []);
-      return data || [];
+      setLikes(data as Like[]);
+      return data as Like[];
     } catch (error: any) {
       console.error('Error fetching likes:', error);
       toast({
@@ -49,20 +49,18 @@ export function useLikes() {
       
       const { data, error } = await supabase
         .from('likes')
-        .insert([
-          { 
+        .insert({
             user_id: user.id, 
             item_id: itemId,
             item_type: itemType 
-          }
-        ])
+        })
         .select()
         .single();
       
       if (error) throw error;
       
-      setLikes(prev => [...prev, data]);
-      return data;
+      setLikes(prev => [...prev, data as Like]);
+      return data as Like;
     } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation - user already liked this item

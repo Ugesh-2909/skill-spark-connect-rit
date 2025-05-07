@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,9 +77,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator?.id || '',
-            username: project.creator?.username || '',
-            full_name: project.creator?.full_name || '',
+            // Use nullish coalescing to handle potentially null values
+            id: project.creator?.id ?? '',
+            username: project.creator?.username ?? '',
+            full_name: project.creator?.full_name ?? '',
             avatar_url: project.creator?.avatar_url
           };
         }
@@ -149,9 +149,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator?.id || '',
-            username: project.creator?.username || '',
-            full_name: project.creator?.full_name || '',
+            // Use nullish coalescing to handle potentially null values
+            id: project.creator?.id ?? '',
+            username: project.creator?.username ?? '',
+            full_name: project.creator?.full_name ?? '',
             avatar_url: project.creator?.avatar_url
           };
         }

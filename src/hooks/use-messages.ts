@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,17 +61,19 @@ export function useMessages() {
       const typedMessages: Message[] = (data || []).map(msg => {
         const sender = typeof msg.sender === 'object' && msg.sender !== null ? 
           {
-            id: msg.sender?.id || '',
-            username: msg.sender?.username || '',
-            full_name: msg.sender?.full_name || '',
+            // Use nullish coalescing to handle possibly null values
+            id: msg.sender?.id ?? '',
+            username: msg.sender?.username ?? '',
+            full_name: msg.sender?.full_name ?? '',
             avatar_url: msg.sender?.avatar_url
           } as Profile : undefined;
           
         const recipient = typeof msg.recipient === 'object' && msg.recipient !== null ? 
           {
-            id: msg.recipient?.id || '',
-            username: msg.recipient?.username || '',
-            full_name: msg.recipient?.full_name || '',
+            // Use nullish coalescing to handle possibly null values
+            id: msg.recipient?.id ?? '',
+            username: msg.recipient?.username ?? '',
+            full_name: msg.recipient?.full_name ?? '',
             avatar_url: msg.recipient?.avatar_url
           } as Profile : undefined;
           

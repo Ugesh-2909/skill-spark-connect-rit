@@ -54,7 +54,7 @@ export function useLeaderboard() {
       const leaderboardData = await Promise.all(filteredProfiles.map(async (profile) => {
         // Call our calculate_user_points function
         const { data, error } = await supabase
-          .rpc('calculate_user_points', { user_uuid: profile.id });
+          .rpc('calculate_user_points', { user_uuid: profile.id as string });
         
         if (error) {
           console.error('Error calculating points for user:', profile.id, error);

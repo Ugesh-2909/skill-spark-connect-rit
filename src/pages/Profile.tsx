@@ -57,8 +57,6 @@ interface ProfileData {
 }
 
 const Profile = () => {
-  // ... keep existing code (state variables and hooks)
-  
   const { id } = useParams();
   const { user } = useAuth();
   const isOwnProfile = !id || id === user?.id;
@@ -128,11 +126,11 @@ const Profile = () => {
         
         // Get user rank and points
         if (profileId) {
-          const rank = await getUserRank(profileId);
+          const rank = await getUserRank(profileId as string);
           setUserRank(rank);
           
           // Get user points
-          const userPoints = await calculateUserPoints(profileId);
+          const userPoints = await calculateUserPoints(profileId as string);
           setPoints(userPoints);
         }
         
@@ -161,8 +159,6 @@ const Profile = () => {
     
     fetchProfileData();
   }, [profileId, user]);
-
-  // ... keep existing code (connection and like handling functions)
 
   const handleSendConnectionRequest = async () => {
     if (!user || !profileId) return;
@@ -238,8 +234,6 @@ const Profile = () => {
     }
   };
 
-  // ... keep existing code (loading and not found states)
-
   if (loading) {
     return (
       <MainLayout>
@@ -274,7 +268,6 @@ const Profile = () => {
     : achievements.filter(achievement => achievement.status === 'verified');
 
   return (
-    // ... keep existing code (Layout, Profile Header)
     <MainLayout>
       <div className="max-w-6xl mx-auto">
         {/* Profile Header */}

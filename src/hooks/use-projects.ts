@@ -1,26 +1,32 @@
 
+// Add type fixes for the use-projects.ts hook
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Define types for the project status
+export type ProjectStatus = 'planning' | 'in_progress' | 'completed' | 'archived';
+
+// Define a type for Profile objects
+export interface Profile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+}
+
+// Define a type for Project objects
 export interface Project {
   id: string;
   title: string;
   description: string | null;
-  created_by: string;
   created_at: string;
+  created_by: string;
+  status: ProjectStatus;
   members: string[] | null;
-  status: 'planning' | 'in_progress' | 'completed' | 'archived';
   creator?: Profile;
   team_members?: Profile[];
-}
-
-interface Profile {
-  id: string;
-  username: string;
-  full_name: string;
-  avatar_url?: string;
 }
 
 export function useProjects() {
@@ -29,105 +35,62 @@ export function useProjects() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (userId?: string) => {
     try {
       setLoading(true);
       
-      // First fetch the projects
       let query = supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          creator:created_by(*)
+        `)
         .order('created_at', { ascending: false });
-
-      // If user is defined, filter by user_id
-      if (user) {
-        query = query.or(`created_by.eq.${user.id},members.cs.{${user.id}}`);
-      }
-
-      const { data: projectsData, error: projectsError } = await query;
-
-      if (projectsError) throw projectsError;
       
-      if (!projectsData || projectsData.length === 0) {
-        setProjects([]);
-        return [];
+      // If user ID is provided, filter by that user
+      if (userId) {
+        query = query.eq('created_by', userId);
       }
       
-      // Update the status field to match the allowed types in the interface
-      const typedProjects = projectsData.map(project => {
-        // Map database status to one of the allowed Project interface status values
-        let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Process the data and get team members for each project
+      const projectsWithTeamMembers = await Promise.all((data || []).map(async (project) => {
+        // If project has members, get their profiles
+        let teamMembers: Profile[] = [];
+        if (project.members && project.members.length > 0) {
+          const { data: membersData } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .in('id', project.members);
+          
+          teamMembers = membersData || [];
+        }
+        
+        // Ensure the status is one of our expected values
+        let typedStatus: ProjectStatus;
         switch(project.status) {
+          case 'planning':
           case 'in_progress':
-            typedStatus = 'in_progress';
-            break;
           case 'completed':
-            typedStatus = 'completed';
-            break;
           case 'archived':
-            typedStatus = 'archived';
+            typedStatus = project.status;
             break;
           default:
-            typedStatus = 'planning';
+            typedStatus = 'planning'; // Default value if unexpected
         }
-        
+
         return {
           ...project,
-          status: typedStatus
-        } as Project;
-      });
-      
-      // For each project, fetch the creator profile
-      const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
-      
-      if (creatorIds.length === 0) {
-        setProjects(typedProjects);
-        return typedProjects;
-      }
-      
-      const { data: creatorProfiles, error: creatorsError } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url')
-        .in('id', creatorIds);
-      
-      if (creatorsError) throw creatorsError;
-      
-      // For each project, fetch the member profiles
-      const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
-        // Find the creator profile
-        const creator = creatorProfiles?.find(profile => profile.id === project.created_by);
-        
-        if (!project.members || project.members.length === 0) {
-          return { 
-            ...project,
-            creator: creator || undefined, 
-            team_members: [] 
-          } as Project;
-        }
-        
-        const { data: memberProfiles, error: memberError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .in('id', project.members);
-        
-        if (memberError) {
-          console.error('Error fetching member profiles:', memberError);
-          return { 
-            ...project, 
-            creator: creator || undefined, 
-            team_members: [] 
-          } as Project;
-        }
-        
-        return { 
-          ...project,
-          creator: creator || undefined,
-          team_members: memberProfiles || []
+          status: typedStatus,
+          team_members: teamMembers,
+          creator: project.creator as Profile
         } as Project;
       }));
       
-      setProjects(projectsWithProfiles);
-      return projectsWithProfiles;
+      setProjects(projectsWithTeamMembers);
     } catch (error: any) {
       console.error('Error fetching projects:', error);
       toast({
@@ -135,188 +98,64 @@ export function useProjects() {
         description: error.message,
         variant: "destructive",
       });
-      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAllProjects = async () => {
-    try {
-      setLoading(true);
-      
-      // First fetch all projects without filtering
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (projectsError) throw projectsError;
-      
-      if (!projectsData || projectsData.length === 0) {
-        setProjects([]);
-        return [];
-      }
-      
-      // Update the status field to match the allowed types in the interface
-      const typedProjects = projectsData.map(project => {
-        // Map database status to one of the allowed Project interface status values
-        let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
-        switch(project.status) {
-          case 'in_progress':
-            typedStatus = 'in_progress';
-            break;
-          case 'completed':
-            typedStatus = 'completed';
-            break;
-          case 'archived':
-            typedStatus = 'archived';
-            break;
-          default:
-            typedStatus = 'planning';
-        }
-        
-        return {
-          ...project,
-          status: typedStatus
-        } as Project;
-      });
-      
-      // For each project, fetch the creator profile
-      const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
-      
-      if (creatorIds.length === 0) {
-        setProjects(typedProjects);
-        return typedProjects;
-      }
-      
-      const { data: creatorProfiles, error: creatorsError } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url')
-        .in('id', creatorIds);
-      
-      if (creatorsError) throw creatorsError;
-      
-      // For each project, fetch the member profiles
-      const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
-        // Find the creator profile
-        const creator = creatorProfiles?.find(profile => profile.id === project.created_by);
-        
-        if (!project.members || project.members.length === 0) {
-          return { 
-            ...project, 
-            creator: creator || undefined, 
-            team_members: [] 
-          } as Project;
-        }
-        
-        const { data: memberProfiles, error: memberError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .in('id', project.members);
-        
-        if (memberError) {
-          console.error('Error fetching member profiles:', memberError);
-          return { 
-            ...project, 
-            creator: creator || undefined, 
-            team_members: [] 
-          } as Project;
-        }
-        
-        return { 
-          ...project,
-          creator: creator || undefined,
-          team_members: memberProfiles || []
-        } as Project;
-      }));
-      
-      setProjects(projectsWithProfiles);
-      return projectsWithProfiles;
-    } catch (error: any) {
-      console.error('Error fetching all projects:', error);
-      toast({
-        title: "Failed to load projects",
-        description: error.message,
-        variant: "destructive",
-      });
-      return [];
-    } finally {
-      setLoading(false);
-    }
+  const fetchUserProjects = async () => {
+    if (!user) return;
+    await fetchProjects(user.id);
   };
 
   const createProject = async (
-    title: string, 
-    description: string, 
-    members: string[] = [],
-    status: 'planning' | 'in_progress' | 'completed' | 'archived' = 'planning'
+    title: string,
+    description: string,
+    teamMembers: string[],
+    status: ProjectStatus
   ) => {
     try {
-      if (!user) throw new Error("You must be logged in to create a project");
-
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to create a project",
+          variant: "destructive",
+        });
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('projects')
         .insert([
-          { 
-            title, 
-            description, 
+          {
+            title,
+            description,
             created_by: user.id,
-            members,
+            members: teamMembers,
             status
           }
         ])
-        .select()
-        .single();
-
+        .select();
+      
       if (error) throw error;
       
-      if (!data) throw new Error("No data returned from project creation");
+      // Get the created project with creator info
+      const createdProject = data![0];
       
-      // Fetch creator profile
-      const { data: creatorProfile, error: creatorError } = await supabase
+      // Get creator profile
+      const { data: creatorData } = await supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url')
         .eq('id', user.id)
         .single();
       
-      if (creatorError) throw creatorError;
-      
-      // Fetch member profiles
-      let team_members: Profile[] = [];
-      if (members.length > 0) {
-        const { data: memberProfiles, error: memberError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .in('id', members);
-        
-        if (memberError) throw memberError;
-        team_members = memberProfiles || [];
-      }
-      
-      // Cast status to the valid enum type
-      let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
-      switch(data.status) {
-        case 'in_progress':
-          typedStatus = 'in_progress';
-          break;
-        case 'completed':
-          typedStatus = 'completed';
-          break;
-        case 'archived':
-          typedStatus = 'archived';
-          break;
-        default:
-          typedStatus = 'planning';
-      }
-      
-      const newProject: Project = {
-        ...data,
-        status: typedStatus,
-        creator: creatorProfile,
-        team_members
-      };
-      
+      // Update projects state
+      const newProject = {
+        ...createdProject,
+        creator: creatorData as Profile,
+        team_members: [] as Profile[]
+      } as Project;
+
       setProjects(prev => [newProject, ...prev]);
       
       toast({
@@ -336,71 +175,33 @@ export function useProjects() {
     }
   };
 
-  const updateProject = async (
-    id: string,
-    updates: {
-      title?: string;
-      description?: string;
-      members?: string[];
-      status?: 'planning' | 'in_progress' | 'completed' | 'archived';
-    }
-  ) => {
+  const updateProject = async (projectId: string, updates: Partial<Project>) => {
     try {
-      if (!user) throw new Error("You must be logged in to update a project");
-
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to update a project",
+          variant: "destructive",
+        });
+        return null;
+      }
+      
+      // Remove non-updatable fields
+      const { id, created_at, created_by, creator, team_members, ...updateData } = updates;
+      
       const { data, error } = await supabase
         .from('projects')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
+        .update(updateData)
+        .eq('id', projectId)
+        .select();
+      
       if (error) throw error;
-      
-      if (!data) throw new Error("No data returned from project update");
-      
-      // Cast status to the valid enum type
-      let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
-      switch(data.status) {
-        case 'in_progress':
-          typedStatus = 'in_progress';
-          break;
-        case 'completed':
-          typedStatus = 'completed';
-          break;
-        case 'archived':
-          typedStatus = 'archived';
-          break;
-        default:
-          typedStatus = 'planning';
-      }
-      
-      const updatedData = {
-        ...data,
-        status: typedStatus
-      };
-      
-      // Fetch member profiles if members were updated
-      let team_members: Profile[] = [];
-      if (updates.members && updates.members.length > 0) {
-        const { data: memberProfiles, error: memberError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .in('id', updates.members);
-        
-        if (memberError) throw memberError;
-        team_members = memberProfiles || [];
-      }
       
       // Update projects state
       setProjects(prev => 
         prev.map(project => 
-          project.id === id 
-            ? { 
-                ...project, 
-                ...updatedData, 
-                ...(team_members.length > 0 ? { team_members } : {})
-              } 
+          project.id === projectId 
+            ? { ...project, ...updateData } as Project
             : project
         )
       );
@@ -410,7 +211,7 @@ export function useProjects() {
         description: "Your project has been updated successfully",
       });
       
-      return updatedData as Project;
+      return data![0] as Project;
     } catch (error: any) {
       console.error('Error updating project:', error);
       toast({
@@ -422,19 +223,27 @@ export function useProjects() {
     }
   };
 
-  const deleteProject = async (id: string) => {
+  const deleteProject = async (projectId: string) => {
     try {
-      if (!user) throw new Error("You must be logged in to delete a project");
-
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to delete a project",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', id);
-
+        .eq('id', projectId);
+      
       if (error) throw error;
       
+      // Update projects state
       setProjects(prev => 
-        prev.filter(project => project.id !== id)
+        prev.filter(project => project.id !== projectId)
       );
       
       toast({
@@ -454,54 +263,6 @@ export function useProjects() {
     }
   };
 
-  const addMember = async (projectId: string, userId: string) => {
-    try {
-      const project = projects.find(p => p.id === projectId);
-      if (!project) throw new Error("Project not found");
-      
-      const members = [...(project.members || [])];
-      if (members.includes(userId)) {
-        toast({
-          title: "User already a member",
-          description: "This user is already a member of the project",
-        });
-        return project;
-      }
-      
-      members.push(userId);
-      
-      return await updateProject(projectId, { members });
-    } catch (error: any) {
-      console.error('Error adding member:', error);
-      toast({
-        title: "Failed to add member",
-        description: error.message,
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const removeMember = async (projectId: string, userId: string) => {
-    try {
-      const project = projects.find(p => p.id === projectId);
-      if (!project) throw new Error("Project not found");
-      
-      const members = [...(project.members || [])];
-      const updatedMembers = members.filter(id => id !== userId);
-      
-      return await updateProject(projectId, { members: updatedMembers });
-    } catch (error: any) {
-      console.error('Error removing member:', error);
-      toast({
-        title: "Failed to remove member",
-        description: error.message,
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   useEffect(() => {
     if (user) {
       fetchProjects();
@@ -511,26 +272,14 @@ export function useProjects() {
   // Subscribe to real-time changes for projects
   useEffect(() => {
     if (!user) return;
-
+    
     const channel = supabase
       .channel('public:projects')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'projects',
-          filter: `created_by=eq.${user.id}`
-        }, 
-        () => {
-          fetchProjects();
-        }
-      )
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'projects',
-          filter: `members=cs.{${user.id}}`
+          table: 'projects'
         }, 
         () => {
           fetchProjects();
@@ -547,11 +296,9 @@ export function useProjects() {
     projects,
     loading,
     fetchProjects,
-    fetchAllProjects,
+    fetchUserProjects,
     createProject,
     updateProject,
-    deleteProject,
-    addMember,
-    removeMember,
+    deleteProject
   };
 }

@@ -147,6 +147,33 @@ export type Database = {
         }
         Relationships: []
       }
+      points_log: {
+        Row: {
+          activity: string
+          created_at: string | null
+          id: string
+          points: number
+          user_id: string
+          verified_by: string | null
+        }
+        Insert: {
+          activity: string
+          created_at?: string | null
+          id?: string
+          points: number
+          user_id: string
+          verified_by?: string | null
+        }
+        Update: {
+          activity?: string
+          created_at?: string | null
+          id?: string
+          points?: number
+          user_id?: string
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -215,7 +242,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_user_points: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

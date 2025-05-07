@@ -12,13 +12,17 @@ import { useMessages, Message } from "@/hooks/use-messages";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+// Import the specific types we need from useMessages hook
+// Use the exported types from useMessages hook
+import { ConversationUser } from '@/hooks/use-messages';
+
 export default function Messages() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const initialUserId = searchParams.get('user');
   
   const [selectedConversation, setSelectedConversation] = useState<string | null>(initialUserId);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ConversationUser | null>(null);
   const [messageText, setMessageText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   

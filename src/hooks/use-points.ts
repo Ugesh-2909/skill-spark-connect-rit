@@ -12,6 +12,16 @@ export const POINT_VALUES = {
   CONNECTION_MADE: 3
 };
 
+// Type definitions for our points_log table
+interface PointsLog {
+  id?: string;
+  user_id: string;
+  points: number;
+  activity: string;
+  created_at?: string;
+  verified_by?: string | null;
+}
+
 export function usePoints() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -43,14 +53,18 @@ export function usePoints() {
       if (!user) return;
       
       // Award points for verified achievement
-      await supabase
+      const pointsData: PointsLog = {
+        user_id: userId,
+        points: POINT_VALUES.ACHIEVEMENT_VERIFIED,
+        activity: 'achievement_verified',
+        verified_by: user.id
+      };
+      
+      const { error } = await supabase
         .from('points_log')
-        .insert([{
-          user_id: userId,
-          points: POINT_VALUES.ACHIEVEMENT_VERIFIED,
-          activity: 'achievement_verified',
-          verified_by: user.id
-        }]);
+        .insert([pointsData]);
+      
+      if (error) throw error;
       
       toast({
         title: "Points awarded",
@@ -65,13 +79,17 @@ export function usePoints() {
     try {
       if (status === 'completed') {
         // Award points for completing a project
-        await supabase
+        const pointsData: PointsLog = {
+          user_id: userId,
+          points: POINT_VALUES.PROJECT_COMPLETED,
+          activity: 'project_completed'
+        };
+        
+        const { error } = await supabase
           .from('points_log')
-          .insert([{
-            user_id: userId,
-            points: POINT_VALUES.PROJECT_COMPLETED,
-            activity: 'project_completed'
-          }]);
+          .insert([pointsData]);
+        
+        if (error) throw error;
         
         toast({
           title: "Points awarded",
@@ -79,13 +97,17 @@ export function usePoints() {
         });
       } else if (status === 'planning') {
         // Award points for creating a new project
-        await supabase
+        const pointsData: PointsLog = {
+          user_id: userId,
+          points: POINT_VALUES.PROJECT_CREATED,
+          activity: 'project_created'
+        };
+        
+        const { error } = await supabase
           .from('points_log')
-          .insert([{
-            user_id: userId,
-            points: POINT_VALUES.PROJECT_CREATED,
-            activity: 'project_created'
-          }]);
+          .insert([pointsData]);
+        
+        if (error) throw error;
         
         toast({
           title: "Points awarded",

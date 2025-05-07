@@ -78,10 +78,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator.id ? String(project.creator.id) : '',
-            username: project.creator.username ? String(project.creator.username) : '',
-            full_name: project.creator.full_name ? String(project.creator.full_name) : '',
-            avatar_url: project.creator.avatar_url
+            id: project.creator?.id ? String(project.creator.id) : '',
+            username: project.creator?.username ? String(project.creator.username) : '',
+            full_name: project.creator?.full_name ? String(project.creator.full_name) : '',
+            avatar_url: project.creator?.avatar_url || null
           };
         }
         
@@ -149,10 +149,10 @@ export function useProjects() {
         
         if (project.creator && typeof project.creator === 'object') {
           creatorProfile = {
-            id: project.creator.id ? String(project.creator.id) : '',
-            username: project.creator.username ? String(project.creator.username) : '',
-            full_name: project.creator.full_name ? String(project.creator.full_name) : '',
-            avatar_url: project.creator.avatar_url
+            id: project.creator?.id ? String(project.creator.id) : '',
+            username: project.creator?.username ? String(project.creator.username) : '',
+            full_name: project.creator?.full_name ? String(project.creator.full_name) : '',
+            avatar_url: project.creator?.avatar_url || null
           };
         }
         

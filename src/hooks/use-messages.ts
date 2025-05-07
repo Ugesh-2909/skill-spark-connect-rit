@@ -60,21 +60,22 @@ export function useMessages() {
 
       // Fix typing issues by ensuring the data has the correct structure
       const typedMessages: Message[] = (data || []).map(msg => {
-        const sender = typeof msg.sender === 'object' && msg.sender !== null ? 
+        // Use proper type guards and non-null assertions where appropriate
+        const sender: Profile | undefined = typeof msg.sender === 'object' && msg.sender !== null ? 
           {
-            id: msg.sender.id !== null ? msg.sender.id : '',
-            username: msg.sender.username !== null ? msg.sender.username : '',
-            full_name: msg.sender.full_name !== null ? msg.sender.full_name : '',
+            id: msg.sender.id ? String(msg.sender.id) : '',
+            username: msg.sender.username ? String(msg.sender.username) : '',
+            full_name: msg.sender.full_name ? String(msg.sender.full_name) : '',
             avatar_url: msg.sender.avatar_url
-          } as Profile : undefined;
+          } : undefined;
           
-        const recipient = typeof msg.recipient === 'object' && msg.recipient !== null ? 
+        const recipient: Profile | undefined = typeof msg.recipient === 'object' && msg.recipient !== null ? 
           {
-            id: msg.recipient.id !== null ? msg.recipient.id : '',
-            username: msg.recipient.username !== null ? msg.recipient.username : '',
-            full_name: msg.recipient.full_name !== null ? msg.recipient.full_name : '',
+            id: msg.recipient.id ? String(msg.recipient.id) : '',
+            username: msg.recipient.username ? String(msg.recipient.username) : '',
+            full_name: msg.recipient.full_name ? String(msg.recipient.full_name) : '',
             avatar_url: msg.recipient.avatar_url
-          } as Profile : undefined;
+          } : undefined;
           
         return {
           id: msg.id,
@@ -234,24 +235,7 @@ export function useMessages() {
     loading,
     fetchMessages,
     fetchConversations,
-    getUnreadMessagesCount: async (): Promise<number> => {
-      try {
-        if (!user) return 0;
-        
-        const { count, error } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('recipient_id', user.id)
-          .eq('read', false);
-        
-        if (error) throw error;
-        
-        return count || 0;
-      } catch (error: any) {
-        console.error('Error getting unread messages count:', error);
-        return 0;
-      }
-    },
+    getUnreadMessagesCount,
     sendMessage: async (recipientId: string, content: string) => {
       try {
         if (!user) {

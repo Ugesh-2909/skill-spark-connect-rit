@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +48,11 @@ export function useProjects() {
 
       if (projectsError) throw projectsError;
       
+      if (!projectsData || projectsData.length === 0) {
+        setProjects([]);
+        return [];
+      }
+      
       // Update the status field to match the allowed types in the interface
       const typedProjects = projectsData.map(project => {
         // Map database status to one of the allowed Project interface status values
@@ -68,11 +74,16 @@ export function useProjects() {
         return {
           ...project,
           status: typedStatus
-        };
+        } as Project;
       });
       
       // For each project, fetch the creator profile
       const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
+      
+      if (creatorIds.length === 0) {
+        setProjects(typedProjects);
+        return typedProjects;
+      }
       
       const { data: creatorProfiles, error: creatorsError } = await supabase
         .from('profiles')
@@ -84,10 +95,14 @@ export function useProjects() {
       // For each project, fetch the member profiles
       const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
         // Find the creator profile
-        const creator = creatorProfiles.find(profile => profile.id === project.created_by);
+        const creator = creatorProfiles?.find(profile => profile.id === project.created_by);
         
         if (!project.members || project.members.length === 0) {
-          return { ...project, creator: creator || undefined, team_members: [] };
+          return { 
+            ...project,
+            creator: creator || undefined, 
+            team_members: [] 
+          } as Project;
         }
         
         const { data: memberProfiles, error: memberError } = await supabase
@@ -97,7 +112,11 @@ export function useProjects() {
         
         if (memberError) {
           console.error('Error fetching member profiles:', memberError);
-          return { ...project, creator: creator || undefined, team_members: [] };
+          return { 
+            ...project, 
+            creator: creator || undefined, 
+            team_members: [] 
+          } as Project;
         }
         
         return { 
@@ -134,6 +153,11 @@ export function useProjects() {
 
       if (projectsError) throw projectsError;
       
+      if (!projectsData || projectsData.length === 0) {
+        setProjects([]);
+        return [];
+      }
+      
       // Update the status field to match the allowed types in the interface
       const typedProjects = projectsData.map(project => {
         // Map database status to one of the allowed Project interface status values
@@ -155,11 +179,16 @@ export function useProjects() {
         return {
           ...project,
           status: typedStatus
-        };
+        } as Project;
       });
       
       // For each project, fetch the creator profile
       const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
+      
+      if (creatorIds.length === 0) {
+        setProjects(typedProjects);
+        return typedProjects;
+      }
       
       const { data: creatorProfiles, error: creatorsError } = await supabase
         .from('profiles')
@@ -171,10 +200,14 @@ export function useProjects() {
       // For each project, fetch the member profiles
       const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
         // Find the creator profile
-        const creator = creatorProfiles.find(profile => profile.id === project.created_by);
+        const creator = creatorProfiles?.find(profile => profile.id === project.created_by);
         
         if (!project.members || project.members.length === 0) {
-          return { ...project, creator: creator || undefined, team_members: [] };
+          return { 
+            ...project, 
+            creator: creator || undefined, 
+            team_members: [] 
+          } as Project;
         }
         
         const { data: memberProfiles, error: memberError } = await supabase
@@ -184,7 +217,11 @@ export function useProjects() {
         
         if (memberError) {
           console.error('Error fetching member profiles:', memberError);
-          return { ...project, creator: creator || undefined, team_members: [] };
+          return { 
+            ...project, 
+            creator: creator || undefined, 
+            team_members: [] 
+          } as Project;
         }
         
         return { 
@@ -234,6 +271,8 @@ export function useProjects() {
 
       if (error) throw error;
       
+      if (!data) throw new Error("No data returned from project creation");
+      
       // Fetch creator profile
       const { data: creatorProfile, error: creatorError } = await supabase
         .from('profiles')
@@ -252,15 +291,31 @@ export function useProjects() {
           .in('id', members);
         
         if (memberError) throw memberError;
-        team_members = memberProfiles;
+        team_members = memberProfiles || [];
       }
       
-      const newProject = {
+      // Cast status to the valid enum type
+      let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
+      switch(data.status) {
+        case 'in_progress':
+          typedStatus = 'in_progress';
+          break;
+        case 'completed':
+          typedStatus = 'completed';
+          break;
+        case 'archived':
+          typedStatus = 'archived';
+          break;
+        default:
+          typedStatus = 'planning';
+      }
+      
+      const newProject: Project = {
         ...data,
-        status: status as 'planning' | 'in_progress' | 'completed' | 'archived',
+        status: typedStatus,
         creator: creatorProfile,
         team_members
-      } as Project;
+      };
       
       setProjects(prev => [newProject, ...prev]);
       
@@ -302,6 +357,29 @@ export function useProjects() {
 
       if (error) throw error;
       
+      if (!data) throw new Error("No data returned from project update");
+      
+      // Cast status to the valid enum type
+      let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
+      switch(data.status) {
+        case 'in_progress':
+          typedStatus = 'in_progress';
+          break;
+        case 'completed':
+          typedStatus = 'completed';
+          break;
+        case 'archived':
+          typedStatus = 'archived';
+          break;
+        default:
+          typedStatus = 'planning';
+      }
+      
+      const updatedData = {
+        ...data,
+        status: typedStatus
+      };
+      
       // Fetch member profiles if members were updated
       let team_members: Profile[] = [];
       if (updates.members && updates.members.length > 0) {
@@ -311,7 +389,7 @@ export function useProjects() {
           .in('id', updates.members);
         
         if (memberError) throw memberError;
-        team_members = memberProfiles;
+        team_members = memberProfiles || [];
       }
       
       // Update projects state
@@ -320,7 +398,7 @@ export function useProjects() {
           project.id === id 
             ? { 
                 ...project, 
-                ...data, 
+                ...updatedData, 
                 ...(team_members.length > 0 ? { team_members } : {})
               } 
             : project
@@ -332,7 +410,7 @@ export function useProjects() {
         description: "Your project has been updated successfully",
       });
       
-      return data;
+      return updatedData as Project;
     } catch (error: any) {
       console.error('Error updating project:', error);
       toast({

@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState } from "react";
@@ -36,14 +35,17 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useAchievements, Achievement } from "@/hooks/use-achievements";
-import { useProjects, Project } from "@/hooks/use-projects";
+import { useAchievements } from "@/hooks/use-achievements";
+import { useProjects } from "@/hooks/use-projects";
 import { useConnections } from "@/hooks/use-connections";
 import { useLikes } from "@/hooks/use-likes";
 import { useToast } from "@/hooks/use-toast";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { AchievementForm } from "@/hooks/use-achievement-form";
+import { ProjectForm } from "@/components/project/ProjectForm";
+import { usePoints } from "@/hooks/use-points";
 
 interface ProfileData {
   id: string;
@@ -55,6 +57,8 @@ interface ProfileData {
 }
 
 const Profile = () => {
+  // ... keep existing code (state variables and hooks)
+  
   const { id } = useParams();
   const { user } = useAuth();
   const isOwnProfile = !id || id === user?.id;
@@ -66,18 +70,14 @@ const Profile = () => {
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [points, setPoints] = useState<number>(0);
-  const [newAchievement, setNewAchievement] = useState({
-    title: "",
-    description: "",
-    points: 10
-  });
   
   const { toast } = useToast();
-  const { achievements, fetchAchievements, addAchievement } = useAchievements();
+  const { achievements, fetchAchievements } = useAchievements();
   const { projects, fetchProjects } = useProjects();
   const { sendConnectionRequest, checkConnectionStatus, acceptConnectionRequest, removeConnection } = useConnections();
   const { likeItem, unlikeItem, checkIfUserLiked } = useLikes();
   const { getUserRank } = useLeaderboard();
+  const { calculateUserPoints } = usePoints();
 
   // Handle likes for achievements
   const [achievementLikes, setAchievementLikes] = useState<{[key: string]: boolean}>({});
@@ -132,10 +132,8 @@ const Profile = () => {
           setUserRank(rank);
           
           // Get user points
-          const { data: pointsData } = await supabase
-            .rpc('calculate_user_points', { user_uuid: profileId });
-          
-          setPoints(pointsData || 0);
+          const userPoints = await calculateUserPoints(profileId);
+          setPoints(userPoints);
         }
         
         // Initialize likes status for achievements
@@ -163,6 +161,8 @@ const Profile = () => {
     
     fetchProfileData();
   }, [profileId, user]);
+
+  // ... keep existing code (connection and like handling functions)
 
   const handleSendConnectionRequest = async () => {
     if (!user || !profileId) return;
@@ -238,27 +238,7 @@ const Profile = () => {
     }
   };
 
-  const handleAddAchievement = async () => {
-    if (!user) return;
-    
-    const result = await addAchievement(
-      newAchievement.title,
-      newAchievement.description,
-      newAchievement.points
-    );
-    
-    if (result) {
-      // Reset form
-      setNewAchievement({
-        title: "",
-        description: "",
-        points: 10
-      });
-      
-      // Refresh achievements
-      fetchAchievements();
-    }
-  };
+  // ... keep existing code (loading and not found states)
 
   if (loading) {
     return (
@@ -294,6 +274,7 @@ const Profile = () => {
     : achievements.filter(achievement => achievement.status === 'verified');
 
   return (
+    // ... keep existing code (Layout, Profile Header)
     <MainLayout>
       <div className="max-w-6xl mx-auto">
         {/* Profile Header */}
@@ -419,56 +400,7 @@ const Profile = () => {
                 Achievements
               </h2>
               
-              {isOwnProfile && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Achievement
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Achievement</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
-                          value={newAchievement.title}
-                          onChange={(e) => setNewAchievement({...newAchievement, title: e.target.value})}
-                          placeholder="Achievement title"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
-                        <Textarea
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
-                          value={newAchievement.description}
-                          onChange={(e) => setNewAchievement({...newAchievement, description: e.target.value})}
-                          placeholder="Describe your achievement"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Points</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          className="w-full border border-gray-300 rounded-md px-3 py-2"
-                          value={newAchievement.points}
-                          onChange={(e) => setNewAchievement({...newAchievement, points: parseInt(e.target.value)})}
-                        />
-                      </div>
-                      <Button className="w-full" onClick={handleAddAchievement}>
-                        Submit Achievement for Verification
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
+              {isOwnProfile && <AchievementForm />}
             </div>
             
             {visibleAchievements.length === 0 ? (
@@ -482,12 +414,7 @@ const Profile = () => {
                       : "This user hasn't added any achievements yet."}
                   </p>
                   {isOwnProfile && (
-                    <Button className="mt-4" asChild>
-                      <DialogTrigger>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Achievement
-                      </DialogTrigger>
-                    </Button>
+                    <AchievementForm />
                   )}
                 </CardContent>
               </Card>
@@ -536,14 +463,7 @@ const Profile = () => {
                 Projects
               </h2>
               
-              {isOwnProfile && (
-                <Button asChild>
-                  <Link to="/projects/new">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Project
-                  </Link>
-                </Button>
-              )}
+              {isOwnProfile && <ProjectForm />}
             </div>
             
             {projects.length === 0 ? (
@@ -556,14 +476,7 @@ const Profile = () => {
                       ? "Start a new project to showcase your work and collaborate with others." 
                       : "This user hasn't created any projects yet."}
                   </p>
-                  {isOwnProfile && (
-                    <Button className="mt-4" asChild>
-                      <Link to="/projects/new">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Project
-                      </Link>
-                    </Button>
-                  )}
+                  {isOwnProfile && <ProjectForm />}
                 </CardContent>
               </Card>
             ) : (

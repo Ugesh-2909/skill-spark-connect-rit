@@ -82,7 +82,7 @@ export function useLeaderboard() {
           console.error('Error counting projects for user:', profile.id, projectsError);
         }
         
-        // Get connections count - fixed to not use string interpolation in .or()
+        // Get connections count using string template literals instead of .or()
         const { count: connectionsCount, error: connectionsError } = await supabase
           .from('connections')
           .select('id', { count: 'exact', head: true })
@@ -133,7 +133,7 @@ export function useLeaderboard() {
     }
   };
 
-  const getUserRank = async (userId: string) => {
+  const getUserRank = async (userId: string): Promise<number | null> => {
     try {
       // Get all leaderboard users
       const allUsers = await fetchLeaderboard();

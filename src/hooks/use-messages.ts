@@ -15,14 +15,14 @@ export interface Message {
   recipient?: Profile;
 }
 
-interface Profile {
+export interface Profile {
   id: string;
   username: string;
   full_name: string;
   avatar_url?: string;
 }
 
-interface Conversation {
+export interface Conversation {
   userId: string;
   username: string;
   full_name: string;
@@ -44,31 +44,50 @@ export function useMessages() {
       if (!user) return [];
       
       setLoading(true);
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:sender_id(id, username, full_name, avatar_url),
-          recipient:recipient_id(id, username, full_name, avatar_url)
-        `)
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .or(`sender_id.eq.${otherUserId},recipient_id.eq.${otherUserId}`)
-        .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      // First fetch the messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .or(`sender_id.eq.${otherUserId},recipient_id.eq.${otherUserId}`);
+      
+      if (messagesError) throw messagesError;
       
       // Filter messages to only show the conversation between these two users
-      const conversationMessages = data.filter(msg => 
+      const conversationMessages = messagesData.filter(msg => 
         (msg.sender_id === user.id && msg.recipient_id === otherUserId) || 
         (msg.sender_id === otherUserId && msg.recipient_id === user.id)
       );
       
-      setMessages(conversationMessages);
+      // Fetch profiles for sender and recipient
+      const userIds = Array.from(new Set([...conversationMessages.map(msg => msg.sender_id), ...conversationMessages.map(msg => msg.recipient_id)]));
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Map profiles to messages
+      const messagesWithProfiles: Message[] = conversationMessages.map(msg => {
+        const senderProfile = profilesData.find(profile => profile.id === msg.sender_id);
+        const recipientProfile = profilesData.find(profile => profile.id === msg.recipient_id);
+        
+        return {
+          ...msg,
+          sender: senderProfile as Profile,
+          recipient: recipientProfile as Profile
+        };
+      });
+      
+      setMessages(messagesWithProfiles);
       
       // Mark messages as read
       markMessagesAsRead(otherUserId);
       
-      return conversationMessages;
+      return messagesWithProfiles;
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       toast({
@@ -89,35 +108,48 @@ export function useMessages() {
       setLoading(true);
       
       // Get all messages sent by or to the current user
-      const { data, error } = await supabase
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:sender_id(id, username, full_name, avatar_url),
-          recipient:recipient_id(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (messagesError) throw messagesError;
+      
+      // Get unique user IDs from messages (excluding the current user)
+      const otherUserIds = Array.from(
+        new Set(
+          messagesData.flatMap(msg => 
+            [msg.sender_id, msg.recipient_id].filter(id => id !== user.id)
+          )
+        )
+      );
+      
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', otherUserIds);
+      
+      if (profilesError) throw profilesError;
       
       // Create a map of user IDs to conversation data
       const conversationsMap = new Map<string, Conversation>();
       
-      data.forEach(msg => {
+      messagesData.forEach(msg => {
         // Determine which user is the other party in the conversation
         const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
-        const otherUser = msg.sender_id === user.id ? msg.recipient : msg.sender;
+        const otherUserProfile = profilesData.find(profile => profile.id === otherUserId);
         
-        if (!otherUser) return;
+        if (!otherUserProfile) return;
         
         // Check if we've already processed this user
         if (!conversationsMap.has(otherUserId)) {
           conversationsMap.set(otherUserId, {
             userId: otherUserId,
-            username: otherUser.username,
-            full_name: otherUser.full_name,
-            avatar_url: otherUser.avatar_url,
+            username: otherUserProfile.username,
+            full_name: otherUserProfile.full_name,
+            avatar_url: otherUserProfile.avatar_url,
             lastMessage: msg.content,
             lastMessageTime: msg.created_at,
             unreadCount: msg.recipient_id === user.id && !msg.read ? 1 : 0
@@ -257,11 +289,31 @@ export function useMessages() {
           table: 'messages',
           filter: `recipient_id=eq.${user.id}`
         }, 
-        (payload) => {
+        async (payload) => {
           const newMessage = payload.new as Message;
           
+          // Fetch sender profile
+          const { data: senderData } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .eq('id', newMessage.sender_id)
+            .single();
+            
+          // Fetch recipient profile
+          const { data: recipientData } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .eq('id', newMessage.recipient_id)
+            .single();
+          
+          const messageWithProfiles = {
+            ...newMessage,
+            sender: senderData as Profile,
+            recipient: recipientData as Profile
+          };
+          
           // If the new message is part of the current conversation, add it to the messages state
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, messageWithProfiles]);
           
           // Refresh conversations to update the last message
           fetchConversations();

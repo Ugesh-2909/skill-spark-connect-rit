@@ -127,26 +127,30 @@ const Profile = () => {
         }
         
         // Get user rank and points
-        const rank = await getUserRank(profileId);
-        setUserRank(rank);
-        
-        // Get user points
-        const { data: pointsData } = await supabase
-          .rpc('calculate_user_points', { user_uuid: profileId });
-        
-        setPoints(pointsData || 0);
+        if (profileId) {
+          const rank = await getUserRank(profileId);
+          setUserRank(rank);
+          
+          // Get user points
+          const { data: pointsData } = await supabase
+            .rpc('calculate_user_points', { user_uuid: profileId });
+          
+          setPoints(pointsData || 0);
+        }
         
         // Initialize likes status for achievements
         const achievementLikesStatus: {[key: string]: boolean} = {};
         for (const achievement of achievements) {
-          achievementLikesStatus[achievement.id] = await checkIfUserLiked(achievement.id, 'achievement');
+          const isLiked = await checkIfUserLiked(achievement.id, 'achievement');
+          achievementLikesStatus[achievement.id] = isLiked;
         }
         setAchievementLikes(achievementLikesStatus);
         
         // Initialize likes status for projects
         const projectLikesStatus: {[key: string]: boolean} = {};
         for (const project of projects) {
-          projectLikesStatus[project.id] = await checkIfUserLiked(project.id, 'project');
+          const isLiked = await checkIfUserLiked(project.id, 'project');
+          projectLikesStatus[project.id] = isLiked;
         }
         setProjectLikes(projectLikesStatus);
         

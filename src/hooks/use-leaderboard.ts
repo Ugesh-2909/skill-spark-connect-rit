@@ -24,7 +24,7 @@ export function useLeaderboard() {
   const { toast } = useToast();
 
   const fetchLeaderboard = async (filter?: { 
-    department?: string, 
+    department?: string | null, 
     limit?: number,
     timeframe?: 'all' | 'monthly' | 'weekly' | 'daily'
   }) => {
@@ -82,7 +82,7 @@ export function useLeaderboard() {
           console.error('Error counting projects for user:', profile.id, projectsError);
         }
         
-        // Get connections count - this needs to be fixed to not use string interpolation in .or()
+        // Get connections count - fixed to not use string interpolation in .or()
         const { count: connectionsCount, error: connectionsError } = await supabase
           .from('connections')
           .select('id', { count: 'exact', head: true })
@@ -167,11 +167,12 @@ export function useLeaderboard() {
       }
       
       // Get unique departments
-      const departments = [...new Set(profiles.map(p => p.department))];
+      const departmentsWithNull = profiles.map(p => p.department);
+      const departments = [...new Set(departmentsWithNull.filter(Boolean))];
       
       // For each department, get the top performer
       const departmentLeaders = await Promise.all(departments.map(async (department) => {
-        const leaders = await fetchLeaderboard({ department: department as string, limit: 1 });
+        const leaders = await fetchLeaderboard({ department, limit: 1 });
         return leaders.length > 0 ? leaders[0] : null;
       }));
       

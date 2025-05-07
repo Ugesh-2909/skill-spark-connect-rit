@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -9,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Search, Send, Loader2 } from "lucide-react";
-import { useMessages, Message, Conversation } from "@/hooks/use-messages";
+import { useMessages, Message } from "@/hooks/use-messages";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 

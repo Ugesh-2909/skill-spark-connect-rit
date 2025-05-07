@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,12 +31,11 @@ export function useProjects() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      
+      // First fetch the projects
       let query = supabase
         .from('projects')
-        .select(`
-          *,
-          creator:created_by(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       // If user is defined, filter by user_id
@@ -45,14 +43,51 @@ export function useProjects() {
         query = query.or(`created_by.eq.${user.id},members.cs.{${user.id}}`);
       }
 
-      const { data, error } = await query;
+      const { data: projectsData, error: projectsError } = await query;
 
-      if (error) throw error;
+      if (projectsError) throw projectsError;
+      
+      // Update the status field to match the allowed types in the interface
+      const typedProjects = projectsData.map(project => {
+        // Map database status to one of the allowed Project interface status values
+        let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
+        switch(project.status) {
+          case 'in_progress':
+            typedStatus = 'in_progress';
+            break;
+          case 'completed':
+            typedStatus = 'completed';
+            break;
+          case 'archived':
+            typedStatus = 'archived';
+            break;
+          default:
+            typedStatus = 'planning';
+        }
+        
+        return {
+          ...project,
+          status: typedStatus
+        };
+      });
+      
+      // For each project, fetch the creator profile
+      const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
+      
+      const { data: creatorProfiles, error: creatorsError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', creatorIds);
+      
+      if (creatorsError) throw creatorsError;
       
       // For each project, fetch the member profiles
-      const projectsWithMemberProfiles = await Promise.all((data || []).map(async (project) => {
+      const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
+        // Find the creator profile
+        const creator = creatorProfiles.find(profile => profile.id === project.created_by);
+        
         if (!project.members || project.members.length === 0) {
-          return { ...project, team_members: [] };
+          return { ...project, creator: creator || undefined, team_members: [] };
         }
         
         const { data: memberProfiles, error: memberError } = await supabase
@@ -62,13 +97,18 @@ export function useProjects() {
         
         if (memberError) {
           console.error('Error fetching member profiles:', memberError);
-          return { ...project, team_members: [] };
+          return { ...project, creator: creator || undefined, team_members: [] };
         }
         
-        return { ...project, team_members: memberProfiles };
+        return { 
+          ...project,
+          creator: creator || undefined,
+          team_members: memberProfiles || []
+        } as Project;
       }));
       
-      setProjects(projectsWithMemberProfiles);
+      setProjects(projectsWithProfiles);
+      return projectsWithProfiles;
     } catch (error: any) {
       console.error('Error fetching projects:', error);
       toast({
@@ -76,6 +116,7 @@ export function useProjects() {
         description: error.message,
         variant: "destructive",
       });
+      return [];
     } finally {
       setLoading(false);
     }
@@ -84,20 +125,56 @@ export function useProjects() {
   const fetchAllProjects = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First fetch all projects without filtering
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select(`
-          *,
-          creator:created_by(id, username, full_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (projectsError) throw projectsError;
+      
+      // Update the status field to match the allowed types in the interface
+      const typedProjects = projectsData.map(project => {
+        // Map database status to one of the allowed Project interface status values
+        let typedStatus: 'planning' | 'in_progress' | 'completed' | 'archived';
+        switch(project.status) {
+          case 'in_progress':
+            typedStatus = 'in_progress';
+            break;
+          case 'completed':
+            typedStatus = 'completed';
+            break;
+          case 'archived':
+            typedStatus = 'archived';
+            break;
+          default:
+            typedStatus = 'planning';
+        }
+        
+        return {
+          ...project,
+          status: typedStatus
+        };
+      });
+      
+      // For each project, fetch the creator profile
+      const creatorIds = Array.from(new Set(typedProjects.map(project => project.created_by)));
+      
+      const { data: creatorProfiles, error: creatorsError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', creatorIds);
+      
+      if (creatorsError) throw creatorsError;
       
       // For each project, fetch the member profiles
-      const projectsWithMemberProfiles = await Promise.all((data || []).map(async (project) => {
+      const projectsWithProfiles = await Promise.all(typedProjects.map(async (project) => {
+        // Find the creator profile
+        const creator = creatorProfiles.find(profile => profile.id === project.created_by);
+        
         if (!project.members || project.members.length === 0) {
-          return { ...project, team_members: [] };
+          return { ...project, creator: creator || undefined, team_members: [] };
         }
         
         const { data: memberProfiles, error: memberError } = await supabase
@@ -107,13 +184,18 @@ export function useProjects() {
         
         if (memberError) {
           console.error('Error fetching member profiles:', memberError);
-          return { ...project, team_members: [] };
+          return { ...project, creator: creator || undefined, team_members: [] };
         }
         
-        return { ...project, team_members: memberProfiles };
+        return { 
+          ...project,
+          creator: creator || undefined,
+          team_members: memberProfiles || []
+        } as Project;
       }));
       
-      setProjects(projectsWithMemberProfiles);
+      setProjects(projectsWithProfiles);
+      return projectsWithProfiles;
     } catch (error: any) {
       console.error('Error fetching all projects:', error);
       toast({
@@ -121,6 +203,7 @@ export function useProjects() {
         description: error.message,
         variant: "destructive",
       });
+      return [];
     } finally {
       setLoading(false);
     }
@@ -174,9 +257,10 @@ export function useProjects() {
       
       const newProject = {
         ...data,
+        status: status as 'planning' | 'in_progress' | 'completed' | 'archived',
         creator: creatorProfile,
         team_members
-      };
+      } as Project;
       
       setProjects(prev => [newProject, ...prev]);
       

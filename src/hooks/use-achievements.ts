@@ -38,7 +38,8 @@ export function useAchievements() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setAchievements(data || []);
+      // Cast the data to ensure it matches the Achievement type
+      setAchievements((data || []) as Achievement[]);
     } catch (error: any) {
       console.error('Error fetching achievements:', error);
       toast({
@@ -60,7 +61,8 @@ export function useAchievements() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAchievements(data || []);
+      // Cast the data to ensure it matches the Achievement type
+      setAchievements((data || []) as unknown as Achievement[]);
     } catch (error: any) {
       console.error('Error fetching all achievements:', error);
       toast({
@@ -85,7 +87,7 @@ export function useAchievements() {
             description, 
             points, 
             user_id: user.id,
-            status: 'pending' 
+            status: 'pending' as const
           }
         ])
         .select()
@@ -93,14 +95,15 @@ export function useAchievements() {
 
       if (error) throw error;
       
-      setAchievements(prev => [data, ...prev]);
+      // Cast the data and add it to the achievements state
+      setAchievements(prev => [(data as Achievement), ...prev]);
       
       toast({
         title: "Achievement added",
         description: "Your achievement has been submitted for verification",
       });
       
-      return data;
+      return data as Achievement;
     } catch (error: any) {
       console.error('Error adding achievement:', error);
       toast({
@@ -116,10 +119,12 @@ export function useAchievements() {
     try {
       if (!user) throw new Error("You must be logged in to verify an achievement");
 
+      const status = verified ? 'verified' as const : 'rejected' as const;
+
       const { data, error } = await supabase
         .from('achievements')
         .update({ 
-          status: verified ? 'verified' : 'rejected',
+          status,
           verified_at: verified ? new Date().toISOString() : null,
           verified_by: verified ? user.id : null
         })
@@ -129,9 +134,10 @@ export function useAchievements() {
 
       if (error) throw error;
       
+      // Update achievements with properly typed data
       setAchievements(prev => 
         prev.map(achievement => 
-          achievement.id === id ? data : achievement
+          achievement.id === id ? (data as Achievement) : achievement
         )
       );
       
@@ -140,7 +146,7 @@ export function useAchievements() {
         description: verified ? "The achievement has been verified" : "The achievement has been rejected",
       });
       
-      return data;
+      return data as Achievement;
     } catch (error: any) {
       console.error('Error verifying achievement:', error);
       toast({

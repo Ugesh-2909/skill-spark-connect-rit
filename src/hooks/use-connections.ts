@@ -35,11 +35,12 @@ export function useConnections() {
       setLoading(true);
       
       // Get connections where the user is the follower
+      // Need to use raw query since connections table wasn't detected by TypeScript
       const { data: followingData, error: followingError } = await supabase
         .from('connections')
         .select(`
           *,
-          following:following_id(id, username, full_name, avatar_url)
+          following:profiles!following_id(id, username, full_name, avatar_url)
         `)
         .eq('follower_id', user.id)
         .eq('status', 'accepted');
@@ -51,7 +52,7 @@ export function useConnections() {
         .from('connections')
         .select(`
           *,
-          follower:follower_id(id, username, full_name, avatar_url)
+          follower:profiles!follower_id(id, username, full_name, avatar_url)
         `)
         .eq('following_id', user.id)
         .eq('status', 'accepted');
@@ -63,15 +64,16 @@ export function useConnections() {
         .from('connections')
         .select(`
           *,
-          follower:follower_id(id, username, full_name, avatar_url)
+          follower:profiles!follower_id(id, username, full_name, avatar_url)
         `)
         .eq('following_id', user.id)
         .eq('status', 'pending');
       
       if (pendingError) throw pendingError;
       
-      setConnections([...followingData, ...followersData]);
-      setPendingRequests(pendingData);
+      // Cast the data to match the Connection type
+      setConnections([...(followingData || []), ...(followersData || [])] as Connection[]);
+      setPendingRequests((pendingData || []) as Connection[]);
     } catch (error: any) {
       console.error('Error fetching connections:', error);
       toast({

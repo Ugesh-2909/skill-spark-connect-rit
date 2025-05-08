@@ -25,6 +25,7 @@ interface ActivityItem {
     type: string | null;
     points: number;
     difficulty?: string | null;
+    image_url?: string | null;
   };
   timestamp: string;
   likes: number;
@@ -52,6 +53,9 @@ export function ActivityFeed() {
           status, 
           created_at, 
           user_id,
+          achievement_type,
+          difficulty,
+          image_url,
           profiles:user_id(*)
         `)
         .order('created_at', { ascending: false })
@@ -76,10 +80,10 @@ export function ActivityFeed() {
             content: `Added a new achievement: ${item.title}`,
             achievement: {
               title: item.title,
-              // Use safe optional chaining for possibly undefined properties
-              type: null, // We'll set this to null since achievement_type doesn't exist
+              type: item.achievement_type || null,
               points: item.points,
-              difficulty: null // Set to null since it doesn't exist
+              difficulty: item.difficulty || null,
+              image_url: item.image_url || null
             },
             timestamp: item.created_at,
             likes: Math.floor(Math.random() * 20), // Mock data for likes
@@ -168,6 +172,15 @@ export function ActivityFeed() {
                 
                 {item.achievement && (
                   <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    {item.achievement.image_url && (
+                      <div className="mb-3">
+                        <img 
+                          src={item.achievement.image_url} 
+                          alt={item.achievement.title}
+                          className="w-full h-40 object-cover rounded-md" 
+                        />
+                      </div>
+                    )}
                     <div className="flex items-center space-x-3">
                       <div className="rounded-full bg-blue-100 p-2">
                         <Award className="h-4 w-4 text-blue-600" />

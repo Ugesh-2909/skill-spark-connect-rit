@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,10 +70,40 @@ export function useAchievements() {
     title: string, 
     description: string, 
     achievementType: string = 'Course Completion',
-    difficulty: string = 'Beginner'
+    difficulty: string = 'Beginner',
+    imageFile?: File
   ) => {
     try {
       if (!user) throw new Error("You must be logged in to add an achievement");
+
+      let imageUrl = null;
+      
+      // Upload image if provided
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        // Check if storage bucket exists, create if not
+        const { data: buckets } = await supabase.storage.listBuckets();
+        if (!buckets?.find(b => b.name === 'achievement-images')) {
+          await supabase.storage.createBucket('achievement-images', {
+            public: true
+          });
+        }
+        
+        const { error: uploadError } = await supabase.storage
+          .from('achievement-images')
+          .upload(filePath, imageFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage
+          .from('achievement-images')
+          .getPublicUrl(filePath);
+          
+        imageUrl = data.publicUrl;
+      }
 
       // Calculate points based on type and difficulty
       const points = calculateAchievementPoints(achievementType, difficulty);
@@ -89,7 +120,8 @@ export function useAchievements() {
             verified_at: new Date().toISOString(),
             verified_by: user.id, // Self-verify for now
             achievement_type: achievementType,
-            difficulty: difficulty
+            difficulty: difficulty,
+            image_url: imageUrl
           }
         ])
         .select()
@@ -166,6 +198,28 @@ export function useAchievements() {
   const deleteAchievement = async (id: string) => {
     try {
       if (!user) throw new Error("You must be logged in to delete an achievement");
+
+      // Get the achievement to check if it has an image
+      const { data: achievement, error: fetchError } = await supabase
+        .from('achievements')
+        .select('image_url')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+        
+      // Delete the achievement's image if it exists
+      if (achievement?.image_url) {
+        const imagePath = achievement.image_url.split('/').slice(-2).join('/');
+        const { error: deleteImageError } = await supabase.storage
+          .from('achievement-images')
+          .remove([imagePath]);
+          
+        if (deleteImageError) {
+          console.error('Error deleting image:', deleteImageError);
+          // Continue with achievement deletion even if image deletion fails
+        }
+      }
 
       const { error } = await supabase
         .from('achievements')

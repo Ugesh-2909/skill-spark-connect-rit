@@ -1,265 +1,254 @@
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAchievements } from '@/hooks/use-achievements';
-import { useToast } from '@/hooks/use-toast';
-import { usePoints } from '@/hooks/use-points';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useAchievements } from "@/hooks/use-achievements";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { 
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
-import { Plus } from 'lucide-react';
-
-const achievementFormSchema = z.object({
-  title: z.string().min(3, {
-    message: "Title must be at least 3 characters long",
-  }).max(100),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters long",
-  }).max(500),
-  achievement_type: z.string().min(1, {
-    message: "Achievement type is required",
-  }),
-  difficulty: z.string().min(1, {
-    message: "Difficulty level is required",
-  }),
-});
-
-type AchievementFormValues = z.infer<typeof achievementFormSchema>;
+import { Award, Plus, Upload } from "lucide-react";
+import { AchievementType, AchievementDifficulty } from '@/types/project.types';
 
 export function AchievementForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-  const { addAchievement } = useAchievements();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [achievementType, setAchievementType] = useState<string>("Course Completion");
+  const [difficulty, setDifficulty] = useState<string>("Beginner");
+  const [isLoading, setIsLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const { toast } = useToast();
-  const { calculateAchievementPoints, ACHIEVEMENT_TYPE_MULTIPLIERS, DIFFICULTY_MULTIPLIERS } = usePoints();
-  
-  // Calculated points preview
-  const [pointsPreview, setPointsPreview] = useState(10); // Default points
+  const { addAchievement } = useAchievements();
 
-  const form = useForm<AchievementFormValues>({
-    resolver: zodResolver(achievementFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      achievement_type: "Course Completion",
-      difficulty: "Beginner",
-    },
-  });
-
-  // Watch for changes to update points preview
-  const achievementType = form.watch("achievement_type");
-  const difficulty = form.watch("difficulty");
-
-  // Update points preview when type or difficulty changes
-  const updatePointsPreview = () => {
-    const newPoints = calculateAchievementPoints(
-      achievementType || "Course Completion",
-      difficulty || "Beginner"
-    );
-    setPointsPreview(newPoints);
-  };
-  
-  // Update points preview whenever type or difficulty changes
-  useEffect(() => {
-    updatePointsPreview();
-  }, [achievementType, difficulty]);
-
-  const onSubmit = async (data: AchievementFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const result = await addAchievement(
-        data.title, 
-        data.description, 
-        data.achievement_type, 
-        data.difficulty
-      );
-      
-      if (result) {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file is an image
+      if (!file.type.startsWith('image/')) {
         toast({
-          title: "Achievement added",
-          description: `Your achievement has been added and earned ${result.points} points`,
+          title: "Invalid file type",
+          description: "Please upload an image file (jpg, png, etc.)",
+          variant: "destructive"
         });
-        form.reset();
-        setOpen(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error submitting achievement:', error);
-      toast({
-        title: "Failed to add achievement",
-        description: "There was an error adding your achievement",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image size should be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a title for your achievement",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await addAchievement(
+        title, 
+        description, 
+        achievementType, 
+        difficulty,
+        imageFile || undefined
+      );
+      
+      if (result) {
+        setOpen(false);
+        setTitle("");
+        setDescription("");
+        setAchievementType("Course Completion");
+        setDifficulty("Beginner");
+        setImageFile(null);
+        setImagePreview(null);
+        
+        toast({
+          title: "Achievement added",
+          description: "Your achievement has been added successfully",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error adding achievement",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const achievementTypes: AchievementType[] = [
+    'Course Completion',
+    'Certification',
+    'Hackathon',
+    'Research Publication',
+    'Community Leadership'
+  ];
+  
+  const difficultyLevels: AchievementDifficulty[] = [
+    'Beginner',
+    'Intermediate',
+    'Advanced',
+    'Expert'
+  ];
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4 mr-2" />
           Add Achievement
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>New Achievement</DialogTitle>
-          <DialogDescription>
-            Add a new achievement and earn points on the leaderboard.
-          </DialogDescription>
+          <DialogTitle className="flex items-center">
+            <Award className="h-5 w-5 mr-2 text-uprit-indigo" />
+            Add New Achievement
+          </DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Achievement Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter a title for your achievement" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input 
+              id="title"
+              placeholder="Enter achievement title" 
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="achievement_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Achievement Type</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select achievement type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.keys(ACHIEVEMENT_TYPE_MULTIPLIERS).map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty Level</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.keys(DIFFICULTY_MULTIPLIERS).map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your achievement in detail" 
-                      className="min-h-[100px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Provide details about your achievement, what you did, and what you learned.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea 
+              id="description"
+              placeholder="Describe your achievement" 
+              className="resize-none min-h-[100px]"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
-            
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Estimated Points</span>
-                <Badge className="text-lg py-1 px-3">{pointsPreview} pts</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Points are calculated based on achievement type and difficulty level
-              </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Achievement Type</Label>
+              <Select
+                value={achievementType}
+                onValueChange={setAchievementType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {achievementTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
-            <div className="flex justify-end space-x-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
+            <div className="space-y-2">
+              <Label htmlFor="difficulty">Difficulty Level</Label>
+              <Select
+                value={difficulty}
+                onValueChange={setDifficulty}
               >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Adding..." : "Add Achievement"}
-              </Button>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {difficultyLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="image">Achievement Image</Label>
+            <div className="flex items-center space-x-4">
+              <Label 
+                htmlFor="image-upload" 
+                className="cursor-pointer border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-uprit-indigo transition-colors flex flex-col items-center justify-center"
+              >
+                {imagePreview ? (
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="max-h-32 max-w-full object-contain mb-2" 
+                  />
+                ) : (
+                  <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                )}
+                <span className="text-sm text-gray-500">
+                  {imageFile ? imageFile.name : "Upload an image (optional)"}
+                </span>
+              </Label>
+              <Input 
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter className="mt-6">
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Adding..." : "Add Achievement"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

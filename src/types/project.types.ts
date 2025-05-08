@@ -43,6 +43,7 @@ export interface Achievement {
   verified_by: string | null;
   achievement_type?: string;
   difficulty?: string;
+  image_url?: string | null;
   user?: Profile;
   profiles?: any; // Added to handle the profiles relation
 }

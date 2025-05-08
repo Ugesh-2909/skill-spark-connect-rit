@@ -11,9 +11,12 @@ export type Database = {
     Tables: {
       achievements: {
         Row: {
+          achievement_type: string | null
           created_at: string
           description: string | null
+          difficulty: string | null
           id: string
+          image_url: string | null
           points: number
           status: string
           title: string
@@ -22,9 +25,12 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          achievement_type?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: string | null
           id?: string
+          image_url?: string | null
           points?: number
           status: string
           title: string
@@ -33,9 +39,12 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          achievement_type?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: string | null
           id?: string
+          image_url?: string | null
           points?: number
           status?: string
           title?: string

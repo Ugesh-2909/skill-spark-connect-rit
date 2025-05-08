@@ -47,3 +47,17 @@ export interface Achievement {
   user?: Profile;
   profiles?: any; // Added to handle the profiles relation
 }
+
+// Extended profile data for user profiles
+export interface ExtendedProfileData {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  department: string | null;
+  location?: string;
+  bio?: string;
+  created_at: string;
+  updated_at?: string;
+  role?: string;
+}

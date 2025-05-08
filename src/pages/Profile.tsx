@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState } from "react";
@@ -32,7 +31,8 @@ import {
   Share, 
   Plus, 
   MessageSquare,
-  Loader2
+  Loader2,
+  Trash
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AchievementForm } from "@/hooks/use-achievement-form";
 import { ProjectForm } from "@/components/project/ProjectForm";
 import { usePoints } from "@/hooks/use-points";
+import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 
 interface ProfileData {
   id: string;
@@ -54,6 +55,8 @@ interface ProfileData {
   full_name: string;
   avatar_url: string | null;
   department: string | null;
+  location?: string;
+  bio?: string;
   created_at: string;
 }
 
@@ -161,6 +164,14 @@ const Profile = () => {
     fetchProfileData();
   }, [profileId, user]);
 
+  const handleProfileUpdated = (newProfileData: ProfileData) => {
+    setProfileData(newProfileData);
+    // Refresh points after profile update in case they changed
+    if (profileId) {
+      calculateUserPoints(profileId).then(newPoints => setPoints(newPoints));
+    }
+  };
+
   const handleSendConnectionRequest = async () => {
     if (!user || !profileId) return;
     
@@ -236,13 +247,19 @@ const Profile = () => {
   };
 
   const handleDeleteAchievement = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this achievement? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete this achievement? This action cannot be undone and will remove the associated points.')) {
       const result = await deleteAchievement(id);
       if (result) {
         toast({
           title: "Achievement deleted",
           description: "Your achievement has been successfully deleted",
         });
+        
+        // Refresh points after deletion
+        if (profileId) {
+          const updatedPoints = await calculateUserPoints(profileId);
+          setPoints(updatedPoints);
+        }
       }
     }
   };
@@ -294,10 +311,7 @@ const Profile = () => {
                 </Avatar>
                 
                 {isOwnProfile && (
-                  <Button variant="outline" size="sm" className="mb-4">
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
+                  <EditProfileDialog profileData={profileData} onProfileUpdated={handleProfileUpdated} />
                 )}
                 
                 <div className="flex gap-2 mt-2">
@@ -357,7 +371,7 @@ const Profile = () => {
                   <p className="font-medium">{profileData.department || 'Student'}</p>
                   <div className="flex items-center text-gray-500 text-sm mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
-                    <span>Rochester, NY</span>
+                    <span>{profileData.location || 'Rochester, NY'}</span>
                   </div>
                   <div className="flex items-center text-gray-500 text-sm mt-1">
                     <Mail className="h-4 w-4 mr-1" />
@@ -366,10 +380,10 @@ const Profile = () => {
                 </div>
                 
                 <p className="text-gray-700 mb-4">
-                  {/* Bio can be added to the profiles table in future */}
-                  {profileData.department 
-                    ? `Student in the ${profileData.department} department with a passion for learning and collaboration.` 
-                    : 'Student with a passion for learning and collaboration.'}
+                  {profileData.bio || 
+                    (profileData.department 
+                      ? `Student in the ${profileData.department} department with a passion for learning and collaboration.` 
+                      : 'Student with a passion for learning and collaboration.')}
                 </p>
                 
                 <div className="grid grid-cols-3 gap-4 text-center">
@@ -476,8 +490,9 @@ const Profile = () => {
                             variant="ghost"
                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleDeleteAchievement(achievement.id)}
+                            title="Delete achievement"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            <Trash className="h-4 w-4" />
                           </Button>
                         )}
                         <Button 

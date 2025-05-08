@@ -199,14 +199,28 @@ export function useAchievements() {
     try {
       if (!user) throw new Error("You must be logged in to delete an achievement");
 
-      // Get the achievement to check if it has an image
+      // Get the achievement to check if it has an image and to get points value
       const { data: achievement, error: fetchError } = await supabase
         .from('achievements')
-        .select('image_url')
+        .select('image_url, points')
         .eq('id', id)
         .single();
         
       if (fetchError) throw fetchError;
+      
+      // Deduct points from the user's total
+      if (achievement && achievement.points) {
+        // Insert negative points entry to counteract the achievement points
+        await supabase
+          .from('points_log')
+          .insert([
+            {
+              user_id: user.id,
+              points: -achievement.points, // Negative points to deduct
+              activity: 'achievement_deleted'
+            }
+          ]);
+      }
         
       // Delete the achievement's image if it exists
       if (achievement?.image_url) {
@@ -234,7 +248,7 @@ export function useAchievements() {
       
       toast({
         title: "Achievement deleted",
-        description: "Your achievement has been deleted",
+        description: "Your achievement has been deleted and points have been adjusted",
       });
       
       return true;

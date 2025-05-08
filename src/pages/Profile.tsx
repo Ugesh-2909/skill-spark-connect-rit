@@ -1,39 +1,10 @@
+
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { AvatarGroup } from "@/components/AvatarGroup";
-import { 
-  Award, 
-  Calendar, 
-  Code, 
-  Edit2, 
-  Github, 
-  Globe, 
-  Linkedin, 
-  MapPin, 
-  Mail, 
-  Milestone, 
-  Twitter, 
-  User, 
-  Users,
-  Heart, 
-  Share, 
-  Plus, 
-  MessageSquare,
-  Loader2,
-  Trash
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAchievements } from "@/hooks/use-achievements";
@@ -42,23 +13,12 @@ import { useConnections } from "@/hooks/use-connections";
 import { useLikes } from "@/hooks/use-likes";
 import { useToast } from "@/hooks/use-toast";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { AchievementForm } from "@/hooks/use-achievement-form";
-import { ProjectForm } from "@/components/project/ProjectForm";
 import { usePoints } from "@/hooks/use-points";
-import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
-
-interface ProfileData {
-  id: string;
-  username: string;
-  full_name: string;
-  avatar_url: string | null;
-  department: string | null;
-  location?: string;
-  bio?: string;
-  created_at: string;
-}
+import { ExtendedProfileData } from "@/types/project.types";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileTabs } from "@/components/profile/ProfileTabs";
+import { AchievementCard } from "@/components/profile/AchievementCard";
+import { ProjectCard } from "@/components/profile/ProjectCard";
 
 const Profile = () => {
   const { id } = useParams();
@@ -66,7 +26,7 @@ const Profile = () => {
   const isOwnProfile = !id || id === user?.id;
   const profileId = id || user?.id;
   
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [profileData, setProfileData] = useState<ExtendedProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string | null>(null);
@@ -164,7 +124,7 @@ const Profile = () => {
     fetchProfileData();
   }, [profileId, user]);
 
-  const handleProfileUpdated = (newProfileData: ProfileData) => {
+  const handleProfileUpdated = (newProfileData: ExtendedProfileData) => {
     setProfileData(newProfileData);
     // Refresh points after profile update in case they changed
     if (profileId) {
@@ -303,300 +263,54 @@ const Profile = () => {
         {/* Profile Header */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex flex-col items-center md:items-start">
-                <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src={profileData.avatar_url || undefined} alt={profileData.full_name} />
-                  <AvatarFallback>{profileData.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                
-                {isOwnProfile && (
-                  <EditProfileDialog profileData={profileData} onProfileUpdated={handleProfileUpdated} />
-                )}
-                
-                <div className="flex gap-2 mt-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
-                    <Github className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
-                    <Linkedin className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
-                    <Twitter className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
-                    <Globe className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                  <div>
-                    <h1 className="text-2xl font-bold">{profileData.full_name}</h1>
-                    <p className="text-gray-500">@{profileData.username}</p>
-                  </div>
-                  
-                  {!isOwnProfile && user && (
-                    <div className="mt-4 md:mt-0 flex space-x-2">
-                      {connectionStatus === 'accepted' ? (
-                        <>
-                          <Button variant="outline" onClick={handleRemoveConnection}>
-                            <Users className="h-4 w-4 mr-2" />
-                            Connected
-                          </Button>
-                          <Button asChild>
-                            <Link to={`/messages?user=${profileId}`}>
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Message
-                            </Link>
-                          </Button>
-                        </>
-                      ) : connectionStatus === 'pending' ? (
-                        <Button variant="outline" disabled>
-                          <Users className="h-4 w-4 mr-2" />
-                          Connection Pending
-                        </Button>
-                      ) : (
-                        <Button className="bg-uprit-indigo hover:bg-uprit-indigo/90" onClick={handleSendConnectionRequest}>
-                          <Users className="h-4 w-4 mr-2" />
-                          Connect
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mb-4">
-                  <p className="font-medium">{profileData.department || 'Student'}</p>
-                  <div className="flex items-center text-gray-500 text-sm mt-1">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span>{profileData.location || 'Rochester, NY'}</span>
-                  </div>
-                  <div className="flex items-center text-gray-500 text-sm mt-1">
-                    <Mail className="h-4 w-4 mr-1" />
-                    <span>{profileData.username}@rit.edu</span>
-                  </div>
-                </div>
-                
-                <p className="text-gray-700 mb-4">
-                  {profileData.bio || 
-                    (profileData.department 
-                      ? `Student in the ${profileData.department} department with a passion for learning and collaboration.` 
-                      : 'Student with a passion for learning and collaboration.')}
-                </p>
-                
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-uprit-indigo font-bold text-xl">{points}</p>
-                    <p className="text-gray-500 text-sm">Points</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-uprit-purple font-bold text-xl">#{userRank || 'N/A'}</p>
-                    <p className="text-gray-500 text-sm">Rank</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-gray-700 font-bold text-xl">{achievements.filter(a => a.status === 'verified').length}</p>
-                    <p className="text-gray-500 text-sm">Achievements</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ProfileHeader 
+              profileData={profileData}
+              isOwnProfile={isOwnProfile}
+              connectionStatus={connectionStatus}
+              connectionId={connectionId}
+              points={points}
+              userRank={userRank}
+              achievementCount={achievements.filter(a => a.status === 'verified').length}
+              onProfileUpdated={handleProfileUpdated}
+              onSendConnectionRequest={handleSendConnectionRequest}
+              onAcceptConnectionRequest={handleAcceptConnectionRequest}
+              onRemoveConnection={handleRemoveConnection}
+            />
           </CardContent>
         </Card>
         
         {/* Profile Content Tabs */}
-        <Tabs defaultValue="achievements" className="mb-6">
-          <TabsList className="w-full justify-start mb-6">
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="achievements" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <Award className="h-5 w-5 mr-2 text-uprit-indigo" />
-                Achievements
-              </h2>
-              
-              {isOwnProfile && <AchievementForm />}
+        <ProfileTabs 
+          isOwnProfile={isOwnProfile}
+          achievementsCount={visibleAchievements.length}
+          projectsCount={projects.length}
+          achievementsContent={
+            <div className="space-y-4">
+              {visibleAchievements.map((achievement) => (
+                <AchievementCard 
+                  key={achievement.id}
+                  achievement={achievement}
+                  isOwnProfile={isOwnProfile}
+                  isLiked={achievementLikes[achievement.id] || false}
+                  onToggleLike={handleToggleLike}
+                  onDeleteAchievement={handleDeleteAchievement}
+                />
+              ))}
             </div>
-            
-            {visibleAchievements.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Award className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  <h3 className="text-lg font-medium">No achievements yet</h3>
-                  <p className="text-gray-500 mt-1">
-                    {isOwnProfile 
-                      ? "Add your achievements to showcase your skills and accomplishments." 
-                      : "This user hasn't added any achievements yet."}
-                  </p>
-                  {isOwnProfile && (
-                    <AchievementForm />
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              visibleAchievements.map((achievement) => (
-                <Card key={achievement.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    {achievement.image_url && (
-                      <div className="mb-3">
-                        <img 
-                          src={achievement.image_url} 
-                          alt={achievement.title}
-                          className="w-full h-32 object-cover rounded-md" 
-                        />
-                      </div>
-                    )}
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{achievement.title}</h3>
-                        <p className="text-gray-600 text-sm mt-1">{achievement.description}</p>
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <div className="flex items-center text-gray-500 text-sm">
-                            <Calendar className="h-3.5 w-3.5 mr-1" />
-                            <span>{new Date(achievement.created_at).toLocaleDateString()}</span>
-                          </div>
-                          
-                          {achievement.achievement_type && (
-                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
-                              {achievement.achievement_type}
-                            </span>
-                          )}
-                          
-                          {achievement.difficulty && (
-                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                              {achievement.difficulty}
-                            </span>
-                          )}
-                          
-                          {isOwnProfile && (
-                            <Badge className="ml-2" variant={achievement.status === 'verified' ? 'default' : 'outline'}>
-                              {achievement.status}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-uprit-indigo">
-                          +{achievement.points} pts
-                        </Badge>
-                        {isOwnProfile && (
-                          <Button 
-                            size="icon" 
-                            variant="ghost"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteAchievement(achievement.id)}
-                            title="Delete achievement"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          onClick={() => handleToggleLike(achievement.id, 'achievement')}
-                          className={achievementLikes[achievement.id] ? 'text-red-500' : ''}
-                        >
-                          <Heart className="h-4 w-4" fill={achievementLikes[achievement.id] ? 'currentColor' : 'none'} />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-          
-          <TabsContent value="projects" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <Code className="h-5 w-5 mr-2 text-uprit-indigo" />
-                Projects
-              </h2>
-              
-              {isOwnProfile && <ProjectForm />}
+          }
+          projectsContent={
+            <div className="space-y-4">
+              {projects.map((project) => (
+                <ProjectCard 
+                  key={project.id}
+                  project={project}
+                  isLiked={projectLikes[project.id] || false}
+                  onToggleLike={handleToggleLike}
+                />
+              ))}
             </div>
-            
-            {projects.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Code className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  <h3 className="text-lg font-medium">No projects yet</h3>
-                  <p className="text-gray-500 mt-1">
-                    {isOwnProfile 
-                      ? "Start a new project to showcase your work and collaborate with others." 
-                      : "This user hasn't created any projects yet."}
-                  </p>
-                  {isOwnProfile && <ProjectForm />}
-                </CardContent>
-              </Card>
-            ) : (
-              projects.map((project) => (
-                <Card key={project.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <h3 className="font-medium">{project.title}</h3>
-                        <p className="text-gray-600 text-sm mt-1">{project.description}</p>
-                        <div className="flex items-center text-gray-500 text-sm mt-2">
-                          <Calendar className="h-3.5 w-3.5 mr-1" />
-                          <span>{new Date(project.created_at).toLocaleDateString()}</span>
-                          <Badge className="ml-2" variant="outline">
-                            {project.status.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            onClick={() => handleToggleLike(project.id, 'project')}
-                            className={projectLikes[project.id] ? 'text-red-500' : ''}
-                          >
-                            <Heart className="h-4 w-4" fill={projectLikes[project.id] ? 'currentColor' : 'none'} />
-                          </Button>
-                          <Button size="icon" variant="ghost">
-                            <Share className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <AvatarGroup max={3}>
-                          {(project.team_members || []).map((member, i) => (
-                            <Avatar key={i} className="h-8 w-8">
-                              <AvatarImage src={member.avatar_url || undefined} />
-                              <AvatarFallback>{member.full_name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                          ))}
-                        </AvatarGroup>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-          
-          <TabsContent value="activity" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Milestone className="h-5 w-5 mr-2 text-uprit-indigo" />
-              Recent Activity
-            </h2>
-            
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Milestone className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                <h3 className="text-lg font-medium">Activity feed coming soon</h3>
-                <p className="text-gray-500 mt-1">
-                  We're working on an activity feed to show your recent actions and updates.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          }
+        />
       </div>
     </MainLayout>
   );

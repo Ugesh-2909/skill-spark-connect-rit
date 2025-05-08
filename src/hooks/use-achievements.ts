@@ -11,7 +11,7 @@ export function useAchievements() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { awardPointsForNewAchievement, calculateAchievementPoints } = usePoints();
+  const { awardPointsForNewAchievement, calculateAchievementPoints, calculateUserPoints } = usePoints();
 
   const fetchAchievements = async () => {
     try {
@@ -202,14 +202,20 @@ export function useAchievements() {
       // Get the achievement to check if it has an image and to get points value
       const { data: achievement, error: fetchError } = await supabase
         .from('achievements')
-        .select('image_url, points')
+        .select('image_url, points, user_id')
         .eq('id', id)
         .single();
         
       if (fetchError) throw fetchError;
       
-      // Deduct points from the user's total
-      if (achievement && achievement.points) {
+      // Get current user points
+      let userPoints = 0;
+      if (achievement && achievement.user_id) {
+        userPoints = await calculateUserPoints(achievement.user_id);
+      }
+      
+      // Only deduct points if user has enough points (don't go below zero)
+      if (achievement && achievement.points && achievement.points <= userPoints) {
         // Insert negative points entry to counteract the achievement points
         await supabase
           .from('points_log')
@@ -242,6 +248,7 @@ export function useAchievements() {
 
       if (error) throw error;
       
+      // Remove the achievement from state
       setAchievements(prev => 
         prev.filter(achievement => achievement.id !== id)
       );

@@ -44,8 +44,16 @@ export function ActivityFeed() {
       const { data: achievementsData, error } = await supabase
         .from('achievements')
         .select(`
-          *,
-          profiles:user_id (*)
+          id, 
+          title, 
+          description, 
+          points, 
+          status, 
+          created_at, 
+          user_id,
+          achievement_type,
+          difficulty,
+          profiles:user_id(*)
         `)
         .order('created_at', { ascending: false })
         .limit(10);

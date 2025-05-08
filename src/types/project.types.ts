@@ -44,4 +44,5 @@ export interface Achievement {
   achievement_type?: string;
   difficulty?: string;
   user?: Profile;
+  profiles?: any; // Added to handle the profiles relation
 }

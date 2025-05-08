@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, Heart, MessageSquare, Share2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+import { Achievement } from '@/types/project.types';
 
 interface ActivityItem {
   id: string;
@@ -51,8 +52,6 @@ export function ActivityFeed() {
           status, 
           created_at, 
           user_id,
-          achievement_type,
-          difficulty,
           profiles:user_id(*)
         `)
         .order('created_at', { ascending: false })
@@ -77,9 +76,10 @@ export function ActivityFeed() {
             content: `Added a new achievement: ${item.title}`,
             achievement: {
               title: item.title,
-              type: item.achievement_type || null,
+              // Use safe optional chaining for possibly undefined properties
+              type: null, // We'll set this to null since achievement_type doesn't exist
               points: item.points,
-              difficulty: item.difficulty || null
+              difficulty: null // Set to null since it doesn't exist
             },
             timestamp: item.created_at,
             likes: Math.floor(Math.random() * 20), // Mock data for likes

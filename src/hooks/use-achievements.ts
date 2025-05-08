@@ -1,30 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePoints } from '@/hooks/use-points';
-
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string | null;
-  points: number;
-  status: 'pending' | 'verified' | 'rejected';
-  created_at: string;
-  user_id: string;
-  verified_at: string | null;
-  verified_by: string | null;
-  achievement_type?: string;
-  difficulty?: string;
-}
-
-interface NewAchievement {
-  title: string;
-  description: string;
-  achievement_type?: string;
-  difficulty?: string;
-}
+import { Achievement } from '@/types/project.types';
 
 export function useAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);

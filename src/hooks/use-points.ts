@@ -12,6 +12,23 @@ export const POINT_VALUES = {
   CONNECTION_MADE: 3
 };
 
+// Achievement type point multipliers
+export const ACHIEVEMENT_TYPE_MULTIPLIERS = {
+  'Hackathon': 3.0,
+  'Certification': 2.5,
+  'Research Publication': 5.0,
+  'Community Leadership': 2.0,
+  'Course Completion': 1.0
+};
+
+// Difficulty multipliers
+export const DIFFICULTY_MULTIPLIERS = {
+  'Beginner': 1.0,
+  'Intermediate': 1.5,
+  'Advanced': 2.0,
+  'Expert': 3.0
+};
+
 // Type definitions for our points_log table
 interface PointsLog {
   id?: string;
@@ -42,6 +59,57 @@ export function usePoints() {
       return data || 0;
     } catch (error: any) {
       console.error('Error calculating points:', error);
+      return 0;
+    }
+  };
+
+  const calculateAchievementPoints = (
+    achievementType: string = 'Course Completion', 
+    difficulty: string = 'Beginner'
+  ): number => {
+    // Default base points
+    const basePoints = 10;
+    
+    // Get multipliers (with fallbacks to default values)
+    const typeMultiplier = ACHIEVEMENT_TYPE_MULTIPLIERS[achievementType as keyof typeof ACHIEVEMENT_TYPE_MULTIPLIERS] || 1.0;
+    const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[difficulty as keyof typeof DIFFICULTY_MULTIPLIERS] || 1.0;
+    
+    // Calculate total points
+    const calculatedPoints = Math.round(basePoints * typeMultiplier * difficultyMultiplier);
+    
+    return calculatedPoints;
+  };
+
+  const awardPointsForNewAchievement = async (
+    userId: string, 
+    achievementType: string = 'Course Completion',
+    difficulty: string = 'Beginner'
+  ): Promise<number> => {
+    try {
+      // Calculate points based on type and difficulty
+      const points = calculateAchievementPoints(achievementType, difficulty);
+      
+      // Award points for the new achievement
+      const pointsData: PointsLog = {
+        user_id: userId,
+        points: points,
+        activity: 'achievement_created'
+      };
+      
+      const { error } = await supabase
+        .from('points_log')
+        .insert([pointsData]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Points awarded",
+        description: `${points} points awarded for your new achievement`,
+      });
+      
+      return points;
+    } catch (error: any) {
+      console.error('Error awarding points:', error);
       return 0;
     }
   };
@@ -122,7 +190,11 @@ export function usePoints() {
   return {
     calculateUserPoints,
     awardPointsForAchievement,
+    awardPointsForNewAchievement,
+    calculateAchievementPoints,
     awardPointsForProject,
-    POINT_VALUES
+    POINT_VALUES,
+    ACHIEVEMENT_TYPE_MULTIPLIERS,
+    DIFFICULTY_MULTIPLIERS
   };
 }

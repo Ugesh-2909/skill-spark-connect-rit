@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { usePoints } from '@/hooks/use-points';
 
 export interface Achievement {
   id: string;
@@ -14,6 +15,15 @@ export interface Achievement {
   user_id: string;
   verified_at: string | null;
   verified_by: string | null;
+  achievement_type?: string;
+  difficulty?: string;
+}
+
+interface NewAchievement {
+  title: string;
+  description: string;
+  achievement_type?: string;
+  difficulty?: string;
 }
 
 export function useAchievements() {
@@ -21,6 +31,7 @@ export function useAchievements() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { awardPointsForNewAchievement, calculateAchievementPoints } = usePoints();
 
   const fetchAchievements = async () => {
     try {
@@ -75,9 +86,17 @@ export function useAchievements() {
     }
   };
 
-  const addAchievement = async (title: string, description: string, points: number) => {
+  const addAchievement = async (
+    title: string, 
+    description: string, 
+    achievementType: string = 'Course Completion',
+    difficulty: string = 'Beginner'
+  ) => {
     try {
       if (!user) throw new Error("You must be logged in to add an achievement");
+
+      // Calculate points based on type and difficulty
+      const points = calculateAchievementPoints(achievementType, difficulty);
 
       const { data, error } = await supabase
         .from('achievements')
@@ -85,9 +104,13 @@ export function useAchievements() {
           { 
             title, 
             description, 
-            points, 
+            points,
             user_id: user.id,
-            status: 'pending' as const
+            status: 'verified' as const, // Auto-verify achievements
+            verified_at: new Date().toISOString(),
+            verified_by: user.id, // Self-verify for now
+            achievement_type: achievementType,
+            difficulty: difficulty
           }
         ])
         .select()
@@ -95,12 +118,15 @@ export function useAchievements() {
 
       if (error) throw error;
       
+      // Award points for the new achievement
+      await awardPointsForNewAchievement(user.id, achievementType, difficulty);
+      
       // Cast the data and add it to the achievements state
       setAchievements(prev => [(data as Achievement), ...prev]);
       
       toast({
         title: "Achievement added",
-        description: "Your achievement has been submitted for verification",
+        description: `Your achievement has been added and awarded ${points} points`,
       });
       
       return data as Achievement;

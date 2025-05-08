@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState } from "react";
@@ -21,8 +22,8 @@ import {
   Github, 
   Globe, 
   Linkedin, 
-  Mail, 
   MapPin, 
+  Mail, 
   Milestone, 
   Twitter, 
   User, 
@@ -70,7 +71,7 @@ const Profile = () => {
   const [points, setPoints] = useState<number>(0);
   
   const { toast } = useToast();
-  const { achievements, fetchAchievements } = useAchievements();
+  const { achievements, fetchAchievements, deleteAchievement } = useAchievements();
   const { projects, fetchProjects } = useProjects();
   const { sendConnectionRequest, checkConnectionStatus, acceptConnectionRequest, removeConnection } = useConnections();
   const { likeItem, unlikeItem, checkIfUserLiked } = useLikes();

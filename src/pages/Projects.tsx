@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ import { ProjectForm } from "@/components/project/ProjectForm";
 import { Badge } from "@/components/ui/badge";
 import { ProjectDeleteDialog } from "@/components/project/ProjectDeleteDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Projects = () => {
   const { projects, userProjects, loadingProjects, fetchProjects, deleteProject } = useProjects();
@@ -73,176 +73,178 @@ const Projects = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-display font-bold">Projects</h1>
-            <p className="text-gray-500">Showcase your work and discover projects from other students</p>
+      <ScrollArea className="h-full">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-display font-bold">Projects</h1>
+              <p className="text-gray-500">Showcase your work and discover projects from other students</p>
+            </div>
+            <ProjectForm onSuccess={fetchProjects} />
           </div>
-          <ProjectForm onSuccess={fetchProjects} />
-        </div>
-        
-        {/* Featured Projects */}
-        {featuredProjects.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Featured Projects</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredProjects.map(project => (
-                <Card key={project.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-                  {project.image_url ? (
-                    <div 
-                      className="h-48 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${project.image_url})` }}
-                    >
-                      <div className="h-full w-full bg-gradient-to-t from-black/70 via-black/20 to-transparent p-6 flex flex-col justify-end">
+          
+          {/* Featured Projects */}
+          {featuredProjects.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Featured Projects</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {featuredProjects.map(project => (
+                  <Card key={project.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
+                    {project.image_url ? (
+                      <div 
+                        className="h-48 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${project.image_url})` }}
+                      >
+                        <div className="h-full w-full bg-gradient-to-t from-black/70 via-black/20 to-transparent p-6 flex flex-col justify-end">
+                          <div className="bg-uprit-indigo text-white text-xs font-medium py-1 px-2 rounded-full inline-block mb-2 w-fit">
+                            Featured Project
+                          </div>
+                          <h2 className="text-white text-xl font-bold">{project.title}</h2>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-gradient-to-r from-purple-500 to-indigo-600 p-6 flex flex-col justify-end">
                         <div className="bg-uprit-indigo text-white text-xs font-medium py-1 px-2 rounded-full inline-block mb-2 w-fit">
                           Featured Project
                         </div>
                         <h2 className="text-white text-xl font-bold">{project.title}</h2>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="h-48 bg-gradient-to-r from-purple-500 to-indigo-600 p-6 flex flex-col justify-end">
-                      <div className="bg-uprit-indigo text-white text-xs font-medium py-1 px-2 rounded-full inline-block mb-2 w-fit">
-                        Featured Project
-                      </div>
-                      <h2 className="text-white text-xl font-bold">{project.title}</h2>
-                    </div>
-                  )}
-                  <CardContent className="p-6">
-                    <p className="text-gray-600 mb-4">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline">
-                        {project.status.replace('_', ' ')}
-                      </Badge>
-                      {project.timeline_status && (
-                        <Badge variant="secondary">
-                          {project.timeline_status.charAt(0).toUpperCase() + project.timeline_status.slice(1)}
+                    )}
+                    <CardContent className="p-6">
+                      <p className="text-gray-600 mb-4">{project.description}</p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Badge variant="outline">
+                          {project.status.replace('_', ' ')}
                         </Badge>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <AvatarGroup>
-                          {project.team_members?.map((member, index) => (
-                            <Avatar key={index}>
-                              <AvatarImage src={member.avatar_url || undefined} />
-                              <AvatarFallback>{member.full_name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                          ))}
-                        </AvatarGroup>
-                        <div className="text-sm text-gray-500">
-                          {project.team_members?.length ?? 0} members
+                        {project.timeline_status && (
+                          <Badge variant="secondary">
+                            {project.timeline_status.charAt(0).toUpperCase() + project.timeline_status.slice(1)}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-4">
+                          <AvatarGroup>
+                            {project.team_members?.map((member, index) => (
+                              <Avatar key={index}>
+                                <AvatarImage src={member.avatar_url || undefined} />
+                                <AvatarFallback>{member.full_name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </AvatarGroup>
+                          <div className="text-sm text-gray-500">
+                            {project.team_members?.length ?? 0} members
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" className="text-uprit-indigo">
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            Demo
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-uprit-indigo">
+                            <Github className="h-4 w-4 mr-1" />
+                            Code
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" className="text-uprit-indigo">
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Demo
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-uprit-indigo">
-                          <Github className="h-4 w-4 mr-1" />
-                          Code
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Project Filter Tabs */}
-        <Tabs defaultValue="all">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-            <TabsList>
-              <TabsTrigger value="all">All Projects</TabsTrigger>
-              <TabsTrigger value="my">My Projects</TabsTrigger>
-            </TabsList>
-            <div className="flex space-x-2">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Search projects..."
-                  className="pl-8 w-full bg-gray-50 border-gray-200 focus-visible:bg-white"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
-          </div>
+          )}
           
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Select value={filter || "all-statuses"} onValueChange={(val) => setFilter(val === "all-statuses" ? null : val)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-statuses">All Statuses</SelectItem>
-                <SelectItem value="planning">Planning</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Project Filter Tabs */}
+          <Tabs defaultValue="all">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <TabsList>
+                <TabsTrigger value="all">All Projects</TabsTrigger>
+                <TabsTrigger value="my">My Projects</TabsTrigger>
+              </TabsList>
+              <div className="flex space-x-2">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="search"
+                    placeholder="Search projects..."
+                    className="pl-8 w-full bg-gray-50 border-gray-200 focus-visible:bg-white"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
             
-            <Select value={timelineFilter || "all-timelines"} onValueChange={(val) => setTimelineFilter(val === "all-timelines" ? null : val)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by timeline" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-timelines">All Timelines</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="past">Past</SelectItem>
-                <SelectItem value="future">Future</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.length === 0 ? (
-                <div className="col-span-3 text-center py-10">
-                  <p className="text-gray-500">No projects found. Try adjusting your filters.</p>
-                </div>
-              ) : (
-                filteredProjects.map(project => (
-                  <ProjectCard 
-                    key={project.id} 
-                    project={project} 
-                    user={user} 
-                    onDelete={handleDeleteProject} 
-                  />
-                ))
-              )}
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Select value={filter || "all-statuses"} onValueChange={(val) => setFilter(val === "all-statuses" ? null : val)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-statuses">All Statuses</SelectItem>
+                  <SelectItem value="planning">Planning</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={timelineFilter || "all-timelines"} onValueChange={(val) => setTimelineFilter(val === "all-timelines" ? null : val)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by timeline" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-timelines">All Timelines</SelectItem>
+                  <SelectItem value="ongoing">Ongoing</SelectItem>
+                  <SelectItem value="past">Past</SelectItem>
+                  <SelectItem value="future">Future</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="my" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userProjects.length === 0 ? (
-                <div className="col-span-3 text-center py-10">
-                  <p className="text-gray-500">You haven't created any projects yet.</p>
-                  <ProjectForm onSuccess={fetchProjects} />
-                </div>
-              ) : (
-                userProjects.map(project => (
-                  <ProjectCard 
-                    key={project.id} 
-                    project={project} 
-                    user={user} 
-                    onDelete={handleDeleteProject}
-                    isOwnProject={true}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+            
+            <TabsContent value="all" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.length === 0 ? (
+                  <div className="col-span-3 text-center py-10">
+                    <p className="text-gray-500">No projects found. Try adjusting your filters.</p>
+                  </div>
+                ) : (
+                  filteredProjects.map(project => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project} 
+                      user={user} 
+                      onDelete={handleDeleteProject} 
+                    />
+                  ))
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="my" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {userProjects.length === 0 ? (
+                  <div className="col-span-3 text-center py-10">
+                    <p className="text-gray-500">You haven't created any projects yet.</p>
+                    <ProjectForm onSuccess={fetchProjects} />
+                  </div>
+                ) : (
+                  userProjects.map(project => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project} 
+                      user={user} 
+                      onDelete={handleDeleteProject}
+                      isOwnProject={true}
+                    />
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </ScrollArea>
     </MainLayout>
   );
 };

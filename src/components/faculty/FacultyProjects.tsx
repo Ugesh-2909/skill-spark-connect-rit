@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarGroup } from "@/components/AvatarGroup";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter, ArrowUpRight, Calendar, Users, Check, Flag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Project {
   id: string;
@@ -87,114 +87,116 @@ const projectsData: Project[] = [
 
 export function FacultyProjects() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Student Projects</h2>
-        <p className="text-muted-foreground mb-6">Monitor and review student projects across your courses</p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search projects..."
-            className="pl-8 w-full bg-gray-50 border-gray-200 focus-visible:bg-white"
-          />
+    <ScrollArea className="h-full">
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Student Projects</h2>
+          <p className="text-muted-foreground mb-6">Monitor and review student projects across your courses</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select defaultValue="all-courses">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Courses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-courses">All Courses</SelectItem>
-              <SelectItem value="web-dev">Web Application Development</SelectItem>
-              <SelectItem value="full-stack">Full Stack Development</SelectItem>
-              <SelectItem value="mobile">Mobile Computing</SelectItem>
-              <SelectItem value="db">Advanced Database Systems</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select defaultValue="all-status">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-status">All Statuses</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="review">Needs Review</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button variant="outline" className="h-10">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
+        
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Search projects..."
+              className="pl-8 w-full bg-gray-50 border-gray-200 focus-visible:bg-white"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Select defaultValue="all-courses">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Courses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-courses">All Courses</SelectItem>
+                <SelectItem value="web-dev">Web Application Development</SelectItem>
+                <SelectItem value="full-stack">Full Stack Development</SelectItem>
+                <SelectItem value="mobile">Mobile Computing</SelectItem>
+                <SelectItem value="db">Advanced Database Systems</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select defaultValue="all-status">
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-status">All Statuses</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="review">Needs Review</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button variant="outline" className="h-10">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {projectsData.map(project => (
-          <Card key={project.id} className="overflow-hidden hover:shadow-md transition-shadow">
-            <div 
-              className="h-40 bg-cover bg-center"
-              style={{ backgroundImage: `url(${project.image})` }}
-            >
-              <div className="h-full bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 flex items-end">
-                <Badge className={
-                  project.status === "Completed" ? "bg-green-500" :
-                  project.status === "In Progress" ? "bg-blue-500" : 
-                  "bg-amber-500"
-                }>
-                  {project.status === "Completed" && <Check className="h-3 w-3 mr-1" />}
-                  {project.status === "Needs Review" && <Flag className="h-3 w-3 mr-1" />}
-                  {project.status}
-                </Badge>
-              </div>
-            </div>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{project.title}</CardTitle>
-              <p className="text-sm text-gray-500">{project.course}</p>
-            </CardHeader>
-            <CardContent className="pb-3">
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {project.tags.map(tag => (
-                  <span key={tag} className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{project.date}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="h-3.5 w-3.5" />
-                  <span>{project.team.length} members</span>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+          {projectsData.map(project => (
+            <Card key={project.id} className="overflow-hidden hover:shadow-md transition-shadow">
+              <div 
+                className="h-40 bg-cover bg-center"
+                style={{ backgroundImage: `url(${project.image})` }}
+              >
+                <div className="h-full bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 flex items-end">
+                  <Badge className={
+                    project.status === "Completed" ? "bg-green-500" :
+                    project.status === "In Progress" ? "bg-blue-500" : 
+                    "bg-amber-500"
+                  }>
+                    {project.status === "Completed" && <Check className="h-3 w-3 mr-1" />}
+                    {project.status === "Needs Review" && <Flag className="h-3 w-3 mr-1" />}
+                    {project.status}
+                  </Badge>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="pt-0 flex justify-between items-center">
-              <AvatarGroup>
-                {project.team.map(member => (
-                  <Avatar key={member.id} className="h-7 w-7">
-                    <AvatarImage src={member.avatar} alt={member.name} />
-                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </AvatarGroup>
-              <Button variant="outline" size="sm">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                Review Project
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">{project.title}</CardTitle>
+                <p className="text-sm text-gray-500">{project.course}</p>
+              </CardHeader>
+              <CardContent className="pb-3">
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {project.tags.map(tag => (
+                    <span key={tag} className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>{project.date}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="h-3.5 w-3.5" />
+                    <span>{project.team.length} members</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="pt-0 flex justify-between items-center">
+                <AvatarGroup>
+                  {project.team.map(member => (
+                    <Avatar key={member.id} className="h-7 w-7">
+                      <AvatarImage src={member.avatar} alt={member.name} />
+                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  ))}
+                </AvatarGroup>
+                <Button variant="outline" size="sm">
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Review Project
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }

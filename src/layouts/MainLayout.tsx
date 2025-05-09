@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -21,9 +22,11 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar open={sidebarOpen} />
       <div className="flex flex-col flex-1 w-full">
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 p-4 md:p-6">
-          {children}
-        </main>
+        <ScrollArea className="flex-1 h-[calc(100vh-64px)]">
+          <main className="p-4 md:p-6">
+            {children}
+          </main>
+        </ScrollArea>
       </div>
     </div>
   );

@@ -115,8 +115,13 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
     setIsSubmitting(true);
     try {
       const projectData = {
-        ...data,
-        image: selectedImage,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        timeline_status: data.timeline_status,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        image: selectedImage
       };
       
       const result = await createProject(projectData);

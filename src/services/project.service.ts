@@ -122,11 +122,11 @@ export const createNewProject = async (userId: string, projectData: ProjectData)
     
     if (uploadError) {
       console.error('Error uploading image:', uploadError);
-    } else {
+    } else if (uploadData) {
       const { data } = supabase
         .storage
         .from('project-images')
-        .getPublicUrl(filePath);
+        .getPublicUrl(uploadData.path);
       
       imageUrl = data.publicUrl;
     }
@@ -180,7 +180,7 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
     .from('projects')
     .select('image_url')
     .eq('id', projectId)
-    .single();
+    .maybeSingle();
   
   if (fetchError) {
     console.error('Error fetching project for deletion:', fetchError);

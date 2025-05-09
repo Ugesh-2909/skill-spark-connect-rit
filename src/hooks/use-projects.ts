@@ -70,18 +70,30 @@ export function useProjects() {
         return null;
       }
       
+      // Ensure required fields are present
+      if (!projectData.title) {
+        toast({
+          title: "Missing required field",
+          description: "Project title is required",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       const data = await createNewProject(user.id, projectData);
       
       // Update projects lists
       setProjects((prev) => {
+        const userProfile = {
+          id: user.id,
+          username: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email || '',
+          avatar_url: user.user_metadata?.avatar_url || null
+        };
+        
         const createdProject = {
           ...data,
-          creator: {
-            id: user.id,
-            username: user.email || '',
-            full_name: user.user_metadata?.full_name || user.email || '',
-            avatar_url: user.user_metadata?.avatar_url || null
-          },
+          creator: userProfile,
           team_members: [] as Profile[],
           status: data.status as ProjectStatus
         };
@@ -90,14 +102,16 @@ export function useProjects() {
       });
       
       setUserProjects((prev) => {
+        const userProfile = {
+          id: user.id,
+          username: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email || '',
+          avatar_url: user.user_metadata?.avatar_url || null
+        };
+        
         const createdProject = {
           ...data,
-          creator: {
-            id: user.id,
-            username: user.email || '',
-            full_name: user.user_metadata?.full_name || user.email || '',
-            avatar_url: user.user_metadata?.avatar_url || null
-          },
+          creator: userProfile,
           team_members: [] as Profile[],
           status: data.status as ProjectStatus
         };

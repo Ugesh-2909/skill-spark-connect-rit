@@ -35,7 +35,7 @@ const Profile = () => {
   
   const { toast } = useToast();
   const { achievements, fetchAchievements, deleteAchievement } = useAchievements();
-  const { projects, fetchProjects, deleteProject } = useProjects();
+  const { projects, userProjects, deleteProject } = useProjects();
   const { sendConnectionRequest, checkConnectionStatus, acceptConnectionRequest, removeConnection } = useConnections();
   const { likeItem, unlikeItem, checkIfUserLiked } = useLikes();
   const { getUserRank } = useLeaderboard();
@@ -65,7 +65,6 @@ const Profile = () => {
         
         // Fetch achievements and projects for this profile
         await fetchAchievements();
-        await fetchProjects();
         
         // Check connection status if not own profile
         if (!isOwnProfile && user) {
@@ -230,15 +229,12 @@ const Profile = () => {
   const handleDeleteProject = async (id: string) => {
     if (!user) return;
     
-    const result = await projects.deleteProject(id);
+    const result = await deleteProject(id);
     if (result) {
       toast({
         title: "Project deleted",
         description: "Your project has been successfully deleted",
       });
-      
-      // Refresh projects
-      await projects.fetchUserProjects();
     }
   };
 

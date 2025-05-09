@@ -5,13 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePoints } from '@/hooks/use-points';
 import { Achievement } from '@/types/project.types';
+import { useAchievementDeletion } from '@/hooks/use-achievement-deletion';
 
 export function useAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { awardPointsForNewAchievement, calculateAchievementPoints, calculateUserPoints } = usePoints();
+  const { awardPointsForNewAchievement, calculateAchievementPoints } = usePoints();
+  const { deleteAchievement: removeAchievement } = useAchievementDeletion();
 
   const fetchAchievements = async () => {
     try {
@@ -29,8 +31,11 @@ export function useAchievements() {
       const { data, error } = await query;
 
       if (error) throw error;
-      // Cast the data to ensure it matches the Achievement type
-      setAchievements((data || []) as Achievement[]);
+      
+      if (data) {
+        // Make sure we're setting the correct data type
+        setAchievements(data as Achievement[]);
+      }
     } catch (error: any) {
       console.error('Error fetching achievements:', error);
       toast({
@@ -52,8 +57,10 @@ export function useAchievements() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Cast the data to ensure it matches the Achievement type
-      setAchievements((data || []) as unknown as Achievement[]);
+      
+      if (data) {
+        setAchievements(data as unknown as Achievement[]);
+      }
     } catch (error: any) {
       console.error('Error fetching all achievements:', error);
       toast({
@@ -80,29 +87,35 @@ export function useAchievements() {
       
       // Upload image if provided
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        
-        // Check if storage bucket exists, create if not
-        const { data: buckets } = await supabase.storage.listBuckets();
-        if (!buckets?.find(b => b.name === 'achievement-images')) {
-          await supabase.storage.createBucket('achievement-images', {
-            public: true
-          });
+        try {
+          // Check if storage bucket exists, create if not
+          const { data: buckets } = await supabase.storage.listBuckets();
+          if (!buckets?.find(b => b.name === 'achievement-images')) {
+            await supabase.storage.createBucket('achievement-images', {
+              public: true,
+              fileSizeLimit: 5242880 // 5MB
+            });
+          }
+          
+          const fileExt = imageFile.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `${user.id}/${fileName}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('achievement-images')
+            .upload(filePath, imageFile);
+            
+          if (uploadError) throw uploadError;
+          
+          const { data } = supabase.storage
+            .from('achievement-images')
+            .getPublicUrl(filePath);
+            
+          imageUrl = data.publicUrl;
+        } catch (storageError) {
+          console.error('Error uploading image:', storageError);
+          // Continue with achievement creation even if image upload fails
         }
-        
-        const { error: uploadError } = await supabase.storage
-          .from('achievement-images')
-          .upload(filePath, imageFile);
-          
-        if (uploadError) throw uploadError;
-        
-        const { data } = supabase.storage
-          .from('achievement-images')
-          .getPublicUrl(filePath);
-          
-        imageUrl = data.publicUrl;
       }
 
       // Calculate points based on type and difficulty
@@ -116,9 +129,9 @@ export function useAchievements() {
             description, 
             points,
             user_id: user.id,
-            status: 'verified' as const, // Auto-verify achievements
+            status: 'verified' as const,
             verified_at: new Date().toISOString(),
-            verified_by: user.id, // Self-verify for now
+            verified_by: user.id,
             achievement_type: achievementType,
             difficulty: difficulty,
             image_url: imageUrl
@@ -132,8 +145,10 @@ export function useAchievements() {
       // Award points for the new achievement
       await awardPointsForNewAchievement(user.id, achievementType, difficulty);
       
-      // Cast the data and add it to the achievements state
-      setAchievements(prev => [(data as Achievement), ...prev]);
+      // Add the new achievement to state
+      if (data) {
+        setAchievements(prev => [data as Achievement, ...prev]);
+      }
       
       toast({
         title: "Achievement added",
@@ -172,11 +187,13 @@ export function useAchievements() {
       if (error) throw error;
       
       // Update achievements with properly typed data
-      setAchievements(prev => 
-        prev.map(achievement => 
-          achievement.id === id ? (data as Achievement) : achievement
-        )
-      );
+      if (data) {
+        setAchievements(prev => 
+          prev.map(achievement => 
+            achievement.id === id ? (data as Achievement) : achievement
+          )
+        );
+      }
       
       toast({
         title: verified ? "Achievement verified" : "Achievement rejected",
@@ -195,79 +212,18 @@ export function useAchievements() {
     }
   };
 
+  // Use our new dedicated hook for deletion and update the UI accordingly
   const deleteAchievement = async (id: string) => {
-    try {
-      if (!user) throw new Error("You must be logged in to delete an achievement");
-
-      // Get the achievement to check if it has an image and to get points value
-      const { data: achievement, error: fetchError } = await supabase
-        .from('achievements')
-        .select('image_url, points, user_id')
-        .eq('id', id)
-        .single();
-        
-      if (fetchError) throw fetchError;
-      
-      // Get current user points
-      let userPoints = 0;
-      if (achievement && achievement.user_id) {
-        userPoints = await calculateUserPoints(achievement.user_id);
-      }
-      
-      // Only deduct points if user has enough points (don't go below zero)
-      if (achievement && achievement.points && achievement.points <= userPoints) {
-        // Insert negative points entry to counteract the achievement points
-        await supabase
-          .from('points_log')
-          .insert([
-            {
-              user_id: user.id,
-              points: -achievement.points, // Negative points to deduct
-              activity: 'achievement_deleted'
-            }
-          ]);
-      }
-        
-      // Delete the achievement's image if it exists
-      if (achievement?.image_url) {
-        const imagePath = achievement.image_url.split('/').slice(-2).join('/');
-        const { error: deleteImageError } = await supabase.storage
-          .from('achievement-images')
-          .remove([imagePath]);
-          
-        if (deleteImageError) {
-          console.error('Error deleting image:', deleteImageError);
-          // Continue with achievement deletion even if image deletion fails
-        }
-      }
-
-      const { error } = await supabase
-        .from('achievements')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      // Remove the achievement from state
+    const success = await removeAchievement(id);
+    
+    if (success) {
+      // Remove the achievement from state to update UI immediately
       setAchievements(prev => 
         prev.filter(achievement => achievement.id !== id)
       );
-      
-      toast({
-        title: "Achievement deleted",
-        description: "Your achievement has been deleted and points have been adjusted",
-      });
-      
-      return true;
-    } catch (error: any) {
-      console.error('Error deleting achievement:', error);
-      toast({
-        title: "Failed to delete achievement",
-        description: error.message,
-        variant: "destructive",
-      });
-      return false;
     }
+    
+    return success;
   };
 
   useEffect(() => {

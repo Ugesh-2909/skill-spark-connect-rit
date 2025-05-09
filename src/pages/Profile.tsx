@@ -41,12 +41,10 @@ const Profile = () => {
   const { getUserRank } = useLeaderboard();
   const { calculateUserPoints } = usePoints();
 
-  // Handle likes for achievements
+  // State for likes
   const [achievementLikes, setAchievementLikes] = useState<{[key: string]: boolean}>({});
-  
-  // Handle likes for projects
   const [projectLikes, setProjectLikes] = useState<{[key: string]: boolean}>({});
-  
+
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -90,29 +88,16 @@ const Profile = () => {
         
         // Get user rank and points
         if (profileId) {
-          const rank = await getUserRank(profileId as string);
+          const rank = await getUserRank(profileId);
           setUserRank(rank);
           
           // Get user points
-          const userPoints = await calculateUserPoints(profileId as string);
+          const userPoints = await calculateUserPoints(profileId);
           setPoints(userPoints);
         }
         
-        // Initialize likes status for achievements
-        const achievementLikesStatus: {[key: string]: boolean} = {};
-        for (const achievement of achievements) {
-          const isLiked = await checkIfUserLiked(achievement.id, 'achievement');
-          achievementLikesStatus[achievement.id] = isLiked;
-        }
-        setAchievementLikes(achievementLikesStatus);
-        
-        // Initialize likes status for projects
-        const projectLikesStatus: {[key: string]: boolean} = {};
-        for (const project of projects) {
-          const isLiked = await checkIfUserLiked(project.id, 'project');
-          projectLikesStatus[project.id] = isLiked;
-        }
-        setProjectLikes(projectLikesStatus);
+        // Initialize likes status
+        await initializeLikesStatus();
         
         setLoading(false);
       } catch (error) {
@@ -123,6 +108,24 @@ const Profile = () => {
     
     fetchProfileData();
   }, [profileId, user]);
+
+  const initializeLikesStatus = async () => {
+    // Initialize likes status for achievements
+    const achievementLikesStatus: {[key: string]: boolean} = {};
+    for (const achievement of achievements) {
+      const isLiked = await checkIfUserLiked(achievement.id, 'achievement');
+      achievementLikesStatus[achievement.id] = isLiked;
+    }
+    setAchievementLikes(achievementLikesStatus);
+    
+    // Initialize likes status for projects
+    const projectLikesStatus: {[key: string]: boolean} = {};
+    for (const project of projects) {
+      const isLiked = await checkIfUserLiked(project.id, 'project');
+      projectLikesStatus[project.id] = isLiked;
+    }
+    setProjectLikes(projectLikesStatus);
+  };
 
   const handleProfileUpdated = (newProfileData: ExtendedProfileData) => {
     setProfileData(newProfileData);

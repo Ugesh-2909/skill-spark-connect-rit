@@ -91,35 +91,54 @@ export function EditProfileDialog({ profileData, onProfileUpdated }: EditProfile
       
       // Upload avatar if a new one was selected
       if (avatarFile) {
-        // Check if avatars bucket exists, create if not
-        const { data: buckets } = await supabase.storage.listBuckets();
-        if (!buckets?.find(b => b.name === 'avatars')) {
-          await supabase.storage.createBucket('avatars', { public: true });
-        }
-        
-        // Upload the new avatar
-        const fileExt = avatarFile.name.split('.').pop();
-        const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, avatarFile, { upsert: true });
+        try {
+          // First check if avatars bucket exists and create it if it doesn't
+          const { data: buckets } = await supabase.storage.listBuckets();
+          if (!buckets?.find(b => b.name === 'avatars')) {
+            await supabase.storage.createBucket('avatars', { 
+              public: true,
+              fileSizeLimit: 5242880 // 5MB
+            });
+            console.log('Created avatars bucket');
+          }
           
-        if (uploadError) throw uploadError;
-        
-        // Get the public URL
-        const { data } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
+          // Upload the new avatar
+          const fileExt = avatarFile.name.split('.').pop();
+          const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
           
-        avatarUrl = data.publicUrl;
-        
-        // Delete old avatar if exists and is not the default
-        if (profileData.avatar_url && !profileData.avatar_url.includes('placeholder')) {
-          const oldPath = profileData.avatar_url.split('/').slice(-2).join('/');
-          await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .remove([oldPath]);
+            .upload(filePath, avatarFile, { upsert: true });
+            
+          if (uploadError) throw uploadError;
+          
+          // Get the public URL
+          const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+            
+          avatarUrl = data.publicUrl;
+          
+          // Delete old avatar if exists and is not the default
+          if (profileData.avatar_url && !profileData.avatar_url.includes('placeholder')) {
+            try {
+              const oldPath = profileData.avatar_url.split('/').slice(-2).join('/');
+              await supabase.storage
+                .from('avatars')
+                .remove([oldPath]);
+            } catch (deleteError) {
+              console.error('Error removing old avatar, continuing anyway:', deleteError);
+              // Continue execution even if deletion fails
+            }
+          }
+        } catch (storageError) {
+          console.error('Error with avatar upload:', storageError);
+          // Continue with profile update even if avatar upload fails
+          toast({
+            title: "Avatar upload failed",
+            description: "Your profile will be updated without the new avatar.",
+            variant: "destructive",
+          });
         }
       }
       
@@ -136,13 +155,26 @@ export function EditProfileDialog({ profileData, onProfileUpdated }: EditProfile
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
-        .select('*')
+        .select()
         .single();
       
       if (error) throw error;
       
+      // Ensure we include all properties to match ExtendedProfileData
+      const updatedProfile = {
+        ...data,
+        ...profileData, // Keep any existing properties that might not be part of the update
+        full_name: values.full_name,
+        username: values.username,
+        department: values.department || null,
+        location: values.location || null,
+        bio: values.bio || null,
+        avatar_url: avatarUrl,
+        updated_at: new Date().toISOString()
+      } as ExtendedProfileData;
+      
       // Call the onProfileUpdated callback with the new data
-      onProfileUpdated(data as ExtendedProfileData);
+      onProfileUpdated(updatedProfile);
       
       setIsOpen(false);
       
@@ -183,7 +215,7 @@ export function EditProfileDialog({ profileData, onProfileUpdated }: EditProfile
               <Avatar className="h-24 w-24 mb-3">
                 <AvatarImage src={avatarPreview || undefined} />
                 <AvatarFallback>
-                  {profileData.full_name.split(" ").map(n => n[0]).join("")}
+                  {profileData.full_name ? profileData.full_name.split(" ").map(n => n[0]).join("") : "U"}
                 </AvatarFallback>
               </Avatar>
               <div>

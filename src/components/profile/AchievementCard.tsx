@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Heart, Calendar, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +20,9 @@ export function AchievementCard({
   onToggleLike,
   onDeleteAchievement
 }: AchievementCardProps) {
+  // Data validation to prevent errors
+  const hasValidDate = achievement?.created_at && !isNaN(new Date(achievement.created_at).getTime());
+  
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -38,10 +40,12 @@ export function AchievementCard({
             <h3 className="font-medium">{achievement.title}</h3>
             <p className="text-gray-600 text-sm mt-1">{achievement.description}</p>
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              <div className="flex items-center text-gray-500 text-sm">
-                <Calendar className="h-3.5 w-3.5 mr-1" />
-                <span>{new Date(achievement.created_at).toLocaleDateString()}</span>
-              </div>
+              {hasValidDate && (
+                <div className="flex items-center text-gray-500 text-sm">
+                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  <span>{new Date(achievement.created_at).toLocaleDateString()}</span>
+                </div>
+              )}
               
               {achievement.achievement_type && (
                 <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
@@ -55,7 +59,7 @@ export function AchievementCard({
                 </span>
               )}
               
-              {isOwnProfile && (
+              {isOwnProfile && achievement.status && (
                 <Badge className="ml-2" variant={achievement.status === 'verified' ? 'default' : 'outline'}>
                   {achievement.status}
                 </Badge>

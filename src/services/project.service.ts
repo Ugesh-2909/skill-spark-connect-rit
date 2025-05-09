@@ -190,8 +190,10 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   // If project has an image, delete it from storage
   if (project && 'image_url' in project && project.image_url) {
     try {
+      // Ensure image_url is a string before using split
+      const imageUrl = project.image_url as string;
       // Extract the file path from the URL
-      const urlParts = project.image_url.split('/');
+      const urlParts = imageUrl.split('/');
       const filePath = urlParts.slice(-2).join('/');
       
       const { error: storageError } = await supabase

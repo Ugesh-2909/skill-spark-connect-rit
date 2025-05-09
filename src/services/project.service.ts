@@ -178,7 +178,7 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   // First check if the project has an image to delete
   const { data: project, error: fetchError } = await supabase
     .from('projects')
-    .select('image_url')
+    .select('*')
     .eq('id', projectId)
     .maybeSingle();
   
@@ -188,7 +188,7 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   }
   
   // If project has an image, delete it from storage
-  if (project?.image_url) {
+  if (project && project.image_url) {
     try {
       // Extract the file path from the URL
       const urlParts = project.image_url.split('/');

@@ -8,7 +8,8 @@ import {
   fetchAllProjects, 
   fetchUserProjects, 
   createNewProject, 
-  updateProjectStatus 
+  updateProjectStatus,
+  deleteProject as deleteProjectService
 } from '@/services/project.service';
 import { createSafeProfile } from '@/utils/project.utils';
 
@@ -153,6 +154,42 @@ export function useProjects() {
     }
   };
 
+  const deleteProject = async (projectId: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to delete projects",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const success = await deleteProjectService(projectId);
+      
+      if (success) {
+        // Remove project from state
+        setProjects(prev => prev.filter(project => project.id !== projectId));
+        setUserProjects(prev => prev.filter(project => project.id !== projectId));
+        
+        toast({
+          title: "Project deleted",
+          description: "The project has been successfully deleted",
+        });
+      }
+      
+      return success;
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Failed to delete project",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -170,6 +207,7 @@ export function useProjects() {
     fetchProjects,
     fetchUserProjects: fetchUserProjectsData,
     createProject,
-    updateProjectStatus: updateProjectStatusLocal
+    updateProjectStatus: updateProjectStatusLocal,
+    deleteProject
   };
 }

@@ -2,6 +2,7 @@
 import { Profile } from './message.types';
 
 export type ProjectStatus = 'planning' | 'in_progress' | 'completed' | 'archived';
+export type TimelineStatus = 'ongoing' | 'past' | 'future';
 
 export interface Project {
   id: string;
@@ -13,11 +14,20 @@ export interface Project {
   members: string[] | null;
   creator?: Profile;
   team_members?: Profile[];
+  image_url?: string | null;
+  timeline_status?: TimelineStatus;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface ProjectData {
   title: string;
   description: string;
+  status?: ProjectStatus;
+  timeline_status?: TimelineStatus;
+  start_date?: string;
+  end_date?: string;
+  image?: File;
   members?: string[];
 }
 

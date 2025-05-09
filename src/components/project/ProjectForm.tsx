@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +35,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Code } from 'lucide-react';
+import { Plus, Code, Upload, Calendar } from 'lucide-react';
 
 const projectFormSchema = z.object({
   title: z.string().min(3, {
@@ -44,6 +45,9 @@ const projectFormSchema = z.object({
     message: "Description must be at least 10 characters long",
   }).max(1000),
   status: z.enum(['planning', 'in_progress', 'completed', 'archived']),
+  timeline_status: z.enum(['ongoing', 'past', 'future']).default('ongoing'),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -55,6 +59,9 @@ interface ProjectFormProps {
 export function ProjectForm({ onSuccess }: ProjectFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { createProject } = useProjects();
   const { awardPointsForProject } = usePoints();
   const { toast } = useToast();
@@ -66,17 +73,53 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
       title: "",
       description: "",
       status: "planning",
+      timeline_status: "ongoing",
+      start_date: "",
+      end_date: "",
     },
   });
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (data: ProjectFormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await createProject({
-        title: data.title,
-        description: data.description,
-        members: []
-      });
+      const projectData = {
+        ...data,
+        image: selectedImage,
+      };
+      
+      const result = await createProject(projectData);
       
       if (result && user) {
         // Award points for creating a project
@@ -88,6 +131,8 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
         });
         
         form.reset();
+        setImagePreview(null);
+        setSelectedImage(null);
         setOpen(false);
         
         if (onSuccess) {
@@ -162,35 +207,142 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Status</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Status</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      The current development status of your project.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="timeline_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Timeline</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select timeline" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ongoing">Ongoing</SelectItem>
+                        <SelectItem value="past">Past</SelectItem>
+                        <SelectItem value="future">Future</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      The timeline category of your project.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
+                      <Input type="date" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The current status of your project. You'll earn more points when completing it.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="end_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormItem>
+              <FormLabel>Project Image</FormLabel>
+              <div className="flex flex-col space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                {imagePreview ? (
+                  <div className="relative w-full h-40">
+                    <img 
+                      src={imagePreview} 
+                      alt="Project preview" 
+                      className="w-full h-full object-cover rounded-md" 
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setSelectedImage(null);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-40 w-full border-dashed"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <Upload className="h-6 w-6 mb-2" />
+                      <span>Click to upload a project image</span>
+                      <span className="text-xs text-gray-500 mt-1">Max size: 5MB</span>
+                    </div>
+                  </Button>
+                )}
+              </div>
+            </FormItem>
             
             <DialogFooter>
               <Button 

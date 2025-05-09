@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEffect, useState } from "react";
@@ -19,6 +18,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
 import { AchievementCard } from "@/components/profile/AchievementCard";
 import { ProjectCard } from "@/components/profile/ProjectCard";
+import { ProjectDeleteDialog } from "@/components/project/ProjectDeleteDialog";
 
 const Profile = () => {
   const { id } = useParams();
@@ -35,7 +35,7 @@ const Profile = () => {
   
   const { toast } = useToast();
   const { achievements, fetchAchievements, deleteAchievement } = useAchievements();
-  const { projects, fetchProjects } = useProjects();
+  const { projects, fetchProjects, deleteProject } = useProjects();
   const { sendConnectionRequest, checkConnectionStatus, acceptConnectionRequest, removeConnection } = useConnections();
   const { likeItem, unlikeItem, checkIfUserLiked } = useLikes();
   const { getUserRank } = useLeaderboard();
@@ -227,6 +227,21 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteProject = async (id: string) => {
+    if (!user) return;
+    
+    const result = await projects.deleteProject(id);
+    if (result) {
+      toast({
+        title: "Project deleted",
+        description: "Your project has been successfully deleted",
+      });
+      
+      // Refresh projects
+      await projects.fetchUserProjects();
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -309,6 +324,7 @@ const Profile = () => {
                   project={project}
                   isLiked={projectLikes[project.id] || false}
                   onToggleLike={handleToggleLike}
+                  onDeleteProject={isOwnProfile ? handleDeleteProject : undefined}
                 />
               ))}
             </div>

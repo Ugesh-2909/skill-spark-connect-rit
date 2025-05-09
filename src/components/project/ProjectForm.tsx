@@ -35,6 +35,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Code, Upload, Calendar } from 'lucide-react';
 
 const projectFormSchema = z.object({
@@ -164,8 +165,8 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
           New Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0">
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
             <Code className="h-5 w-5" />
             Create New Project
@@ -175,113 +176,17 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter a title for your project" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your project in detail" 
-                      className="min-h-[120px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Explain what your project is about, its goals, and any other relevant information.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
               <FormField
                 control={form.control}
-                name="status"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project Status</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="planning">Planning</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      The current development status of your project.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="timeline_status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Timeline</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select timeline" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="ongoing">Ongoing</SelectItem>
-                        <SelectItem value="past">Past</SelectItem>
-                        <SelectItem value="future">Future</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      The timeline category of your project.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel>Project Title</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input placeholder="Enter a title for your project" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -290,82 +195,181 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
               
               <FormField
                 control={form.control}
-                name="end_date"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Textarea 
+                        placeholder="Describe your project in detail" 
+                        className="min-h-[120px] resize-none"
+                        {...field} 
+                      />
                     </FormControl>
+                    <FormDescription>
+                      Explain what your project is about, its goals, and any other relevant information.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <FormItem>
-              <FormLabel>Project Image</FormLabel>
-              <div className="flex flex-col space-y-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Status</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="planning">Planning</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The current development status of your project.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {imagePreview ? (
-                  <div className="relative w-full h-40">
-                    <img 
-                      src={imagePreview} 
-                      alt="Project preview" 
-                      className="w-full h-full object-cover rounded-md" 
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setSelectedImage(null);
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-40 w-full border-dashed"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      <Upload className="h-6 w-6 mb-2" />
-                      <span>Click to upload a project image</span>
-                      <span className="text-xs text-gray-500 mt-1">Max size: 5MB</span>
-                    </div>
-                  </Button>
-                )}
+                
+                <FormField
+                  control={form.control}
+                  name="timeline_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Timeline</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select timeline" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="ongoing">Ongoing</SelectItem>
+                          <SelectItem value="past">Past</SelectItem>
+                          <SelectItem value="future">Future</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The timeline category of your project.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </FormItem>
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Creating..." : "Create Project"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormItem>
+                <FormLabel>Project Image</FormLabel>
+                <div className="flex flex-col space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreview ? (
+                    <div className="relative w-full h-40">
+                      <img 
+                        src={imagePreview} 
+                        alt="Project preview" 
+                        className="w-full h-full object-cover rounded-md" 
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
+                        onClick={() => {
+                          setImagePreview(null);
+                          setSelectedImage(null);
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-40 w-full border-dashed"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <Upload className="h-6 w-6 mb-2" />
+                        <span>Click to upload a project image</span>
+                        <span className="text-xs text-gray-500 mt-1">Max size: 5MB</span>
+                      </div>
+                    </Button>
+                  )}
+                </div>
+              </FormItem>
+            </form>
+          </Form>
+        </ScrollArea>
+        
+        <DialogFooter className="px-6 py-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Project"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Project, ProjectData, ProjectStatus } from '@/types/project.types';
 import { Profile } from '@/types/message.types';
@@ -188,12 +187,10 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   }
   
   // If project has an image, delete it from storage
-  if (project && 'image_url' in project && project.image_url) {
+  if (project && project.image_url && typeof project.image_url === 'string') {
     try {
-      // Ensure image_url is a string before using split
-      const imageUrl = project.image_url as string;
       // Extract the file path from the URL
-      const urlParts = imageUrl.split('/');
+      const urlParts = project.image_url.split('/');
       const filePath = urlParts.slice(-2).join('/');
       
       const { error: storageError } = await supabase

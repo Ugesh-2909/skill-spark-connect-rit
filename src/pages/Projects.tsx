@@ -176,12 +176,12 @@ const Projects = () => {
           
           {/* Filters */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <Select value={filter || ""} onValueChange={(val) => setFilter(val || null)}>
+            <Select value={filter || "all-statuses"} onValueChange={(val) => setFilter(val === "all-statuses" ? null : val)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all-statuses">All Statuses</SelectItem>
                 <SelectItem value="planning">Planning</SelectItem>
                 <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
@@ -189,12 +189,12 @@ const Projects = () => {
               </SelectContent>
             </Select>
             
-            <Select value={timelineFilter || ""} onValueChange={(val) => setTimelineFilter(val || null)}>
+            <Select value={timelineFilter || "all-timelines"} onValueChange={(val) => setTimelineFilter(val === "all-timelines" ? null : val)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by timeline" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Timelines</SelectItem>
+                <SelectItem value="all-timelines">All Timelines</SelectItem>
                 <SelectItem value="ongoing">Ongoing</SelectItem>
                 <SelectItem value="past">Past</SelectItem>
                 <SelectItem value="future">Future</SelectItem>

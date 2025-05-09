@@ -188,7 +188,7 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   }
   
   // If project has an image, delete it from storage
-  if (project && project.image_url) {
+  if (project && 'image_url' in project && project.image_url) {
     try {
       // Extract the file path from the URL
       const urlParts = project.image_url.split('/');

@@ -6,15 +6,11 @@ import { Project, ProjectData, ProjectStatus } from '@/types/project.types';
 import { Profile } from '@/types/message.types';
 import { 
   fetchAllProjects, 
-  fetchUserProjects, 
+  fetchUserProjects as fetchUserProjectsService, 
   createNewProject, 
   updateProjectStatus,
   deleteProject as deleteProjectService
 } from '@/services/project.service';
-import { createSafeProfile } from '@/utils/project.utils';
-
-export type { Project, ProjectData, ProjectStatus } from '@/types/project.types';
-export type { Profile } from '@/types/message.types';
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -45,7 +41,7 @@ export function useProjects() {
       if (!user) return;
       
       setLoadingProjects(true);
-      const projectsWithMembers = await fetchUserProjects(user.id);
+      const projectsWithMembers = await fetchUserProjectsService(user.id);
       setUserProjects(projectsWithMembers);
     } catch (error: any) {
       console.error('Error fetching user projects:', error);
@@ -225,3 +221,6 @@ export function useProjects() {
     deleteProject
   };
 }
+
+export type { Project, ProjectData, ProjectStatus } from '@/types/project.types';
+export type { Profile } from '@/types/message.types';

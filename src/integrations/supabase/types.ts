@@ -227,6 +227,7 @@ export type Database = {
           members: string[] | null
           start_date: string | null
           status: string
+          timeline_status: string | null
           title: string
         }
         Insert: {
@@ -239,6 +240,7 @@ export type Database = {
           members?: string[] | null
           start_date?: string | null
           status: string
+          timeline_status?: string | null
           title: string
         }
         Update: {
@@ -251,6 +253,7 @@ export type Database = {
           members?: string[] | null
           start_date?: string | null
           status?: string
+          timeline_status?: string | null
           title?: string
         }
         Relationships: []

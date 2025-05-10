@@ -1,5 +1,5 @@
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,24 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import { usePoints } from '@/hooks/use-points';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+  Form
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -36,7 +21,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Code, Upload, Calendar } from 'lucide-react';
+import { Plus, Code } from 'lucide-react';
+import { ProjectFormFields } from './ProjectFormFields';
 
 const projectFormSchema = z.object({
   title: z.string().min(3, {
@@ -62,7 +48,6 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
   const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { createProject } = useProjects();
   const { awardPointsForProject } = usePoints();
   const { toast } = useToast();
@@ -79,38 +64,6 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
       end_date: "",
     },
   });
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const onSubmit = async (data: ProjectFormValues) => {
     setIsSubmitting(true);
@@ -179,177 +132,12 @@ export function ProjectForm({ onSuccess }: ProjectFormProps) {
         <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter a title for your project" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <ProjectFormFields 
+                form={form}
+                imagePreview={imagePreview}
+                setImagePreview={setImagePreview}
+                setSelectedImage={setSelectedImage}
               />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Describe your project in detail" 
-                        className="min-h-[120px] resize-none"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Explain what your project is about, its goals, and any other relevant information.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Status</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="planning">Planning</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        The current development status of your project.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="timeline_status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timeline</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select timeline" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ongoing">Ongoing</SelectItem>
-                          <SelectItem value="past">Past</SelectItem>
-                          <SelectItem value="future">Future</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        The timeline category of your project.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="start_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="end_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormItem>
-                <FormLabel>Project Image</FormLabel>
-                <div className="flex flex-col space-y-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                  {imagePreview ? (
-                    <div className="relative w-full h-40">
-                      <img 
-                        src={imagePreview} 
-                        alt="Project preview" 
-                        className="w-full h-full object-cover rounded-md" 
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setSelectedImage(null);
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-40 w-full border-dashed"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <div className="flex flex-col items-center justify-center">
-                        <Upload className="h-6 w-6 mb-2" />
-                        <span>Click to upload a project image</span>
-                        <span className="text-xs text-gray-500 mt-1">Max size: 5MB</span>
-                      </div>
-                    </Button>
-                  )}
-                </div>
-              </FormItem>
             </form>
           </Form>
         </ScrollArea>

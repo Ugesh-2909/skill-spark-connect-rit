@@ -50,12 +50,15 @@ export const fetchActivityItems = async (limit: number = 10): Promise<ActivityIt
         achievement_type,
         difficulty,
         image_url,
-        profiles(id, full_name, username, avatar_url, department)
+        profiles:user_id(id, full_name, username, avatar_url, department)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
       
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error fetching activity items:', error);
+      throw error;
+    }
     
     if (!achievementsData || achievementsData.length === 0) {
       return [];

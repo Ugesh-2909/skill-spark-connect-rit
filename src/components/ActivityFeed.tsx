@@ -5,24 +5,34 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Award, Heart, MessageSquare, Share2 } from "lucide-react";
+import { Award, Heart, MessageSquare, Share2, Loader2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityItem, fetchActivityItems, subscribeToActivityUpdates } from '@/services/activity.service';
+import { useToast } from '@/hooks/use-toast';
 
 export function ActivityFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
   
   // Fetch all achievements and format them as activity items
   const loadActivityItems = async () => {
     setLoading(true);
+    setError(null);
     
     try {
       const activityItems = await fetchActivityItems(10);
       setActivities(activityItems);
-    } catch (error) {
-      console.error('Error loading activity items:', error);
+    } catch (err: any) {
+      console.error('Error loading activity items:', err);
+      setError(err.message || 'Failed to load activities');
+      toast({
+        title: "Error loading activities",
+        description: err.message || 'Failed to load activities',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -57,7 +67,21 @@ export function ActivityFeed() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-10">Loading activities...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-uprit-indigo mb-2" />
+        <p className="text-gray-500">Loading activities...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        <p className="font-medium text-red-500 mb-2">Error loading activities</p>
+        <Button variant="outline" onClick={loadActivityItems}>Try Again</Button>
+      </div>
+    );
   }
 
   return (

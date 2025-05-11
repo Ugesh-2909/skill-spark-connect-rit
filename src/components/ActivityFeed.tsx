@@ -7,30 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, Heart, MessageSquare, Share2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { Achievement } from '@/types/project.types';
-
-interface ActivityItem {
-  id: string;
-  type: 'achievement' | 'project' | 'connection';
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    avatar: string | null;
-    program: string | null;
-  };
-  content: string;
-  achievement?: {
-    title: string;
-    type: string | null;
-    points: number;
-    difficulty?: string | null;
-    image_url?: string | null;
-  };
-  timestamp: string;
-  likes: number;
-  comments: number;
-}
+import { ActivityItem, fetchActivityItems, subscribeToActivityUpdates } from '@/services/activity.service';
 
 export function ActivityFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -38,85 +15,24 @@ export function ActivityFeed() {
   const { user } = useAuth();
   
   // Fetch all achievements and format them as activity items
-  const fetchActivityItems = async () => {
+  const loadActivityItems = async () => {
     setLoading(true);
     
     try {
-      // Fetch achievements with user profiles
-      const { data: achievementsData, error } = await supabase
-        .from('achievements')
-        .select(`
-          id, 
-          title, 
-          description, 
-          points, 
-          status, 
-          created_at, 
-          user_id,
-          achievement_type,
-          difficulty,
-          image_url,
-          profiles:user_id(*)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-        
-      if (error) throw error;
-      
-      if (achievementsData) {
-        const formattedActivities: ActivityItem[] = achievementsData.map(item => {
-          const profile = item.profiles as any; // Type cast to access properties
-          
-          return {
-            id: item.id,
-            type: 'achievement',
-            user: {
-              id: item.user_id,
-              name: profile?.full_name || 'Unknown User',
-              username: profile?.username || 'unknown',
-              avatar: profile?.avatar_url,
-              program: profile?.department || 'Student'
-            },
-            content: `Added a new achievement: ${item.title}`,
-            achievement: {
-              title: item.title,
-              type: item.achievement_type || null,
-              points: item.points,
-              difficulty: item.difficulty || null,
-              image_url: item.image_url || null
-            },
-            timestamp: item.created_at,
-            likes: Math.floor(Math.random() * 20), // Mock data for likes
-            comments: Math.floor(Math.random() * 10), // Mock data for comments
-          };
-        });
-        
-        setActivities(formattedActivities);
-      }
+      const activityItems = await fetchActivityItems(10);
+      setActivities(activityItems);
     } catch (error) {
-      console.error('Error fetching activity items:', error);
+      console.error('Error loading activity items:', error);
     } finally {
       setLoading(false);
     }
   };
   
   useEffect(() => {
-    fetchActivityItems();
+    loadActivityItems();
     
     // Set up real-time subscription for new achievements
-    const channel = supabase
-      .channel('public:achievements')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'achievements' 
-        }, 
-        () => {
-          fetchActivityItems(); // Refresh when new achievements are added
-        }
-      )
-      .subscribe();
+    const channel = subscribeToActivityUpdates(loadActivityItems);
       
     return () => {
       supabase.removeChannel(channel);

@@ -39,6 +39,58 @@ export const createNewProject = async (userId: string, projectData: ProjectData)
 };
 
 /**
+ * Update an existing project
+ */
+export const updateProject = async (projectId: string, userId: string, projectData: Partial<ProjectData>): Promise<any> => {
+  if (!projectId) throw new Error("Project ID is required to update a project");
+  if (!userId) throw new Error("User ID is required to update a project");
+  
+  // First get the current project data
+  const { data: existingProject, error: fetchError } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', projectId)
+    .single();
+  
+  if (fetchError) throw fetchError;
+  
+  // Check if user is authorized to update this project
+  if (existingProject.created_by !== userId && !existingProject.members?.includes(userId)) {
+    throw new Error("You don't have permission to update this project");
+  }
+  
+  // Handle image update if needed
+  let imageUrl = existingProject.image_url;
+  if (projectData.image) {
+    // Delete old image if exists
+    if (imageUrl) {
+      await deleteProjectImage(imageUrl);
+    }
+    // Upload new image
+    imageUrl = await uploadProjectImage(userId, projectData.image);
+  }
+  
+  const updateData: any = {
+    ...projectData,
+    image_url: imageUrl
+  };
+  
+  // Remove the file object as it can't be stored in Supabase
+  delete updateData.image;
+  
+  const { data, error } = await supabase
+    .from('projects')
+    .update(updateData)
+    .eq('id', projectId)
+    .select('*')
+    .single();
+  
+  if (error) throw error;
+  
+  return data;
+};
+
+/**
  * Update the status of a project
  */
 export const updateProjectStatus = async (projectId: string, status: ProjectStatus): Promise<any> => {

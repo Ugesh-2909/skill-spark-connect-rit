@@ -14,7 +14,7 @@ const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email address").refine(
-    (email) => email.endsWith("@rit.edu") || email.endsWith("@csbs.ritchennai.edu.in")|| email.endsWith("@aids.ritchennai.edu.in")|| email.endsWith("@cse.ritchennai.edu.in")|| email.endsWith("@cce.ritchennai.edu.in"),
+    (email) => email.endsWith("@rit.edu") || email.endsWith("@csbs.ritchennai.edu.in")|| email.endsWith("@aids.ritchennai.edu.in")|| email.endsWith("@cse.ritchennai.edu.in")|| email.endsWith("@cce.ritchennai.edu.in")|| email.endsWith("@gmail.com"),
     {
       message: "Please use your RIT email address (@rit.edu or @csbs.ritchennai.edu.in)",
     }

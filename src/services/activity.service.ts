@@ -36,8 +36,8 @@ export interface ActivityItem {
  */
 export const fetchActivityItems = async (limit: number = 10): Promise<ActivityItem[]> => {
   try {
-    // Fetch achievements with user profiles
-    const { data: achievementsData, error } = await supabase
+    // First fetch achievements
+    const { data: achievementsData, error: achievementsError } = await supabase
       .from('achievements')
       .select(`
         id, 
@@ -49,34 +49,50 @@ export const fetchActivityItems = async (limit: number = 10): Promise<ActivityIt
         user_id,
         achievement_type,
         difficulty,
-        image_url,
-        profiles:user_id(id, full_name, username, avatar_url, department)
+        image_url
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
       
-    if (error) {
-      console.error('Supabase error fetching activity items:', error);
-      throw error;
+    if (achievementsError) {
+      console.error('Supabase error fetching achievements:', achievementsError);
+      throw achievementsError;
     }
     
     if (!achievementsData || achievementsData.length === 0) {
       return [];
     }
     
-    // Transform achievements into activity items
-    const activityItems: ActivityItem[] = achievementsData.map(item => {
-      const profile = item.profiles as any; // Type cast to access properties
+    // For each achievement, get the user profile
+    const activityItems: ActivityItem[] = await Promise.all(achievementsData.map(async (item) => {
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url, department')
+        .eq('id', item.user_id)
+        .single();
+        
+      if (profileError) {
+        console.error(`Error fetching profile for achievement ${item.id}:`, profileError);
+      }
+      
+      const profile = profileData || { 
+        id: item.user_id, 
+        username: 'unknown', 
+        full_name: 'Unknown User', 
+        avatar_url: null, 
+        department: null 
+      };
       
       return {
         id: item.id,
         type: 'achievement',
         user: {
-          id: item.user_id,
-          name: profile?.full_name || 'Unknown User',
-          username: profile?.username || 'unknown',
-          avatar: profile?.avatar_url,
-          program: profile?.department || 'Student'
+          id: profile.id,
+          name: profile.full_name || 'Unknown User',
+          username: profile.username || 'unknown',
+          avatar: profile.avatar_url,
+          program: profile.department || 'Student'
         },
         content: `Added a new achievement: ${item.title}`,
         achievement: {
@@ -90,7 +106,7 @@ export const fetchActivityItems = async (limit: number = 10): Promise<ActivityIt
         likes: Math.floor(Math.random() * 20), // Mock data for likes
         comments: Math.floor(Math.random() * 10), // Mock data for comments
       };
-    });
+    }));
     
     return activityItems;
   } catch (error) {

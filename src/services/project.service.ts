@@ -2,8 +2,6 @@
 import { fetchAllProjects, fetchUserProjects } from './project/project-fetch.service';
 import { createNewProject, updateProjectStatus, updateProject, deleteProject } from './project/project-mutation.service';
 import { uploadProjectImage, deleteProjectImage } from './project/project-image.service';
-
-// Add a real-time subscription for projects
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -17,6 +15,28 @@ export const subscribeToProjectUpdates = (callback: () => void) => {
         event: '*', 
         schema: 'public', 
         table: 'projects' 
+      }, 
+      () => {
+        callback();
+      }
+    )
+    .subscribe();
+    
+  return channel;
+};
+
+/**
+ * Subscribe to real-time project updates for a specific user
+ */
+export const subscribeToUserProjectUpdates = (userId: string, callback: () => void) => {
+  const channel = supabase
+    .channel(`public:projects:user:${userId}`)
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'projects',
+        filter: `created_by=eq.${userId}`
       }, 
       () => {
         callback();

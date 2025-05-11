@@ -9,28 +9,36 @@ import { createSafeProfile } from '@/utils/project.utils';
  */
 export const fetchAllProjects = async (): Promise<Project[]> => {
   try {
-    // Get all projects and their creator's info
-    const { data, error } = await supabase
+    // First fetch all projects
+    const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
-      .select(`
-        *,
-        creator:profiles!created_by(*)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
-    if (error) {
-      console.error('Error fetching projects:', error);
-      throw error;
+    if (projectsError) {
+      console.error('Error fetching projects:', projectsError);
+      throw projectsError;
     }
     
-    if (!data) {
+    if (!projectsData || projectsData.length === 0) {
       return [];
     }
 
-    // For each project, get team member profile details
-    const projectsWithMembers = await Promise.all(data.map(async (project) => {
-      let teamMembers: Profile[] = [];
+    // For each project, get the creator profile and team member profiles separately
+    const projectsWithDetails = await Promise.all(projectsData.map(async (project) => {
+      // Get creator profile
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .eq('id', project.created_by)
+        .single();
+        
+      if (creatorError) {
+        console.error(`Error fetching creator for project ${project.id}:`, creatorError);
+      }
       
+      // Get team member profiles if any
+      let teamMembers: Profile[] = [];
       if (project.members && project.members.length > 0) {
         const { data: memberProfiles, error: membersError } = await supabase
           .from('profiles')
@@ -38,7 +46,7 @@ export const fetchAllProjects = async (): Promise<Project[]> => {
           .in('id', project.members);
         
         if (membersError) {
-          console.error('Error fetching team members:', membersError);
+          console.error(`Error fetching team members for project ${project.id}:`, membersError);
         }
         
         if (memberProfiles) {
@@ -47,7 +55,14 @@ export const fetchAllProjects = async (): Promise<Project[]> => {
       }
       
       // Create a safe creator profile object with fallbacks
-      const creatorProfile = createSafeProfile(project.creator);
+      const creatorProfile = creatorData 
+        ? createSafeProfile(creatorData) 
+        : {
+            id: project.created_by,
+            username: 'unknown',
+            full_name: 'Unknown User',
+            avatar_url: null
+          };
       
       return {
         ...project,
@@ -57,7 +72,7 @@ export const fetchAllProjects = async (): Promise<Project[]> => {
       };
     }));
     
-    return projectsWithMembers as Project[];
+    return projectsWithDetails as Project[];
   } catch (error) {
     console.error('Error in fetchAllProjects:', error);
     throw error;
@@ -71,29 +86,37 @@ export const fetchUserProjects = async (userId: string): Promise<Project[]> => {
   try {
     if (!userId) return [];
     
-    // Get projects where user is creator or member
-    const { data, error } = await supabase
+    // First fetch projects where user is creator or member
+    const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
-      .select(`
-        *,
-        creator:profiles!created_by(*)
-      `)
+      .select('*')
       .or(`created_by.eq.${userId},members.cs.{${userId}}`)
       .order('created_at', { ascending: false });
     
-    if (error) {
-      console.error('Error fetching user projects:', error);
-      throw error;
+    if (projectsError) {
+      console.error('Error fetching user projects:', projectsError);
+      throw projectsError;
     }
     
-    if (!data) {
+    if (!projectsData || projectsData.length === 0) {
       return [];
     }
     
-    // For each project, get team member profile details
-    const projectsWithMembers = await Promise.all(data.map(async (project) => {
-      let teamMembers: Profile[] = [];
+    // For each project, get the creator profile and team member profiles separately
+    const projectsWithDetails = await Promise.all(projectsData.map(async (project) => {
+      // Get creator profile
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .eq('id', project.created_by)
+        .single();
+        
+      if (creatorError) {
+        console.error(`Error fetching creator for project ${project.id}:`, creatorError);
+      }
       
+      // Get team member profiles if any
+      let teamMembers: Profile[] = [];
       if (project.members && project.members.length > 0) {
         const { data: memberProfiles, error: membersError } = await supabase
           .from('profiles')
@@ -101,7 +124,7 @@ export const fetchUserProjects = async (userId: string): Promise<Project[]> => {
           .in('id', project.members);
         
         if (membersError) {
-          console.error('Error fetching team members:', membersError);
+          console.error(`Error fetching team members for project ${project.id}:`, membersError);
         }
         
         if (memberProfiles) {
@@ -110,7 +133,14 @@ export const fetchUserProjects = async (userId: string): Promise<Project[]> => {
       }
       
       // Create a safe creator profile object with fallbacks
-      const creatorProfile = createSafeProfile(project.creator);
+      const creatorProfile = creatorData 
+        ? createSafeProfile(creatorData) 
+        : {
+            id: project.created_by,
+            username: 'unknown',
+            full_name: 'Unknown User',
+            avatar_url: null
+          };
       
       return {
         ...project,
@@ -120,7 +150,7 @@ export const fetchUserProjects = async (userId: string): Promise<Project[]> => {
       };
     }));
     
-    return projectsWithMembers as Project[];
+    return projectsWithDetails as Project[];
   } catch (error) {
     console.error('Error in fetchUserProjects:', error);
     throw error;

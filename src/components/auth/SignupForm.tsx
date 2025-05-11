@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -54,10 +55,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
     setIsLoading(true);
     
     try {
-      // Call the signUp function from AuthContext
+      const username = `${data.firstName.toLowerCase()}_${data.lastName.toLowerCase()}`;
+      const fullName = `${data.firstName} ${data.lastName}`;
+      
+      // Call the signUp function from AuthContext with updated metadata
       await signUp(data.email, data.password, {
-        username: `${data.firstName.toLowerCase()}_${data.lastName.toLowerCase()}`,
-        full_name: `${data.firstName} ${data.lastName}`
+        username: username,
+        full_name: fullName,
+        role: "student" // Set default role
       });
       
       // Show success message
@@ -69,6 +74,8 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       // Call the success callback to switch to login tab
       onSuccess();
     } catch (error: any) {
+      console.error("Signup error:", error);
+      
       toast({
         title: "Registration failed",
         description: error.message || "Please try again or contact support if the issue persists.",

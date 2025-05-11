@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: { username?: string; full_name?: string }) => Promise<void>;
+  signUp: (email: string, password: string, userData: { username?: string; full_name?: string; role?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   getProfile: () => Promise<any>;
 }
@@ -69,8 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { username?: string; full_name?: string }) => {
+  const signUp = async (email: string, password: string, userData: { username?: string; full_name?: string; role?: string }) => {
     try {
+      console.log("Signing up with data:", { email, userData });
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -80,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
+        console.error("Signup error:", error);
         throw error;
       }
       
@@ -88,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Please check your email for verification link",
       });
     } catch (error: any) {
+      console.error("Error in signUp:", error);
       toast({
         title: "Error signing up",
         description: error.message,

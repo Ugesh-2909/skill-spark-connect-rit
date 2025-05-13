@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +16,11 @@ import {
 import { Award, Plus, Upload } from "lucide-react";
 import { AchievementType, AchievementDifficulty } from '@/types/project.types';
 
-export function AchievementForm() {
+interface AchievementFormProps {
+  trigger?: ReactNode;
+}
+
+export function AchievementForm({ trigger }: AchievementFormProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -128,10 +131,12 @@ export function AchievementForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Achievement
-        </Button>
+        {trigger || (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Achievement
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

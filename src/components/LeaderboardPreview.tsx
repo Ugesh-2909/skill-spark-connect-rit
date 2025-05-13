@@ -1,62 +1,33 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface LeaderboardUser {
-  id: string;
-  name: string;
-  avatar: string;
-  program: string;
-  points: number;
-  rank: number;
-}
-
-const leaderboardUsers: LeaderboardUser[] = [
-  {
-    id: "1",
-    name: "Michael Chen",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    program: "Computer Science",
-    points: 875,
-    rank: 1
-  },
-  {
-    id: "2",
-    name: "Ava Williams",
-    avatar: "https://i.pravatar.cc/150?img=24",
-    program: "Software Engineering",
-    points: 842,
-    rank: 2
-  },
-  {
-    id: "3",
-    name: "Ethan Brown",
-    avatar: "https://i.pravatar.cc/150?img=59",
-    program: "Data Science",
-    points: 816,
-    rank: 3
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    avatar: "https://i.pravatar.cc/150?img=45",
-    program: "Cybersecurity",
-    points: 802,
-    rank: 4
-  },
-  {
-    id: "5",
-    name: "Noah Taylor",
-    avatar: "https://i.pravatar.cc/150?img=67",
-    program: "Game Design",
-    points: 788,
-    rank: 5
-  },
-];
+import { useLeaderboard } from "@/hooks/use-leaderboard";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export function LeaderboardPreview() {
+  const { leaderboard, loading } = useLeaderboard();
+  const [topUsers, setTopUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (leaderboard.length > 0) {
+      // Sort by points and take top 10
+      const sortedUsers = [...leaderboard]
+        .sort((a, b) => b.points - a.points)
+        .slice(0, 10);
+      setTopUsers(sortedUsers);
+    }
+  }, [leaderboard]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin text-uprit-indigo" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {leaderboardUsers.map((user) => (
+      {topUsers.map((user) => (
         <div 
           key={user.id} 
           className={`flex items-center justify-between p-2 rounded-lg ${
@@ -73,12 +44,12 @@ export function LeaderboardPreview() {
               {user.rank}
             </div>
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.avatar_url || undefined} alt={user.full_name} />
+              <AvatarFallback>{user.full_name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <h4 className="text-sm font-medium">{user.name}</h4>
-              <p className="text-xs text-gray-500">{user.program}</p>
+              <h4 className="text-sm font-medium">{user.full_name}</h4>
+              <p className="text-xs text-gray-500">{user.department || 'Not specified'}</p>
             </div>
           </div>
           <div className="text-sm font-medium">{user.points}</div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useMessages } from "@/hooks/use-messages";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
@@ -32,7 +30,7 @@ export function Sidebar({ open }: SidebarProps) {
   const { unreadCount } = useNotifications();
   const { getUnreadMessagesCount } = useMessages();
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const fetchUnreadMessages = async () => {
@@ -54,7 +52,7 @@ export function Sidebar({ open }: SidebarProps) {
 
   // Function to handle sign out
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
   };
 
   return (

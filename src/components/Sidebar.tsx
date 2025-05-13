@@ -72,13 +72,13 @@ export function Sidebar({ open }: SidebarProps) {
         >
           {open ? (
             <div className="flex items-center">
-              <img src="/placeholder.svg" alt="Logo" className="h-8 w-8" />
+              <img src="/logo.png" alt="Logo" className="h-9 w-8" />
               <span className="text-xl font-bold ml-2 text-uprit-indigo">
                 UpRIT
               </span>
             </div>
           ) : (
-            <img src="/placeholder.svg" alt="Logo" className="h-8 w-8" />
+            <img src="/logo.png" alt="Logo" className="h-9 w-8" />
           )}
         </Link>
       </div>

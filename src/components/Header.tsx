@@ -111,8 +111,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage 
-                      src={profile?.avatar_url || "https://i.pravatar.cc/150?img=5"} 
-                      alt={profile?.full_name || "User"} 
+                      src={profile?.avatar_url || undefined} alt={profile?.full_name}
                     />
                     <AvatarFallback>
                       {profile?.full_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
